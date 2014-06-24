@@ -2604,6 +2604,15 @@ Handsontable.TableView = function (instance) {
 
       renderer(that.instance, TD, row, col, prop, value, cellProperties);
 
+      if(that.settings.rowHeight) {
+        var DIV = document.createElement('div');
+        DIV.className = 'fixedRowHeight';
+        DIV.style.height = that.settings.rowHeight + 'px';
+        DIV.innerHTML = TD.innerHTML;
+        TD.innerHTML = '';
+        TD.appendChild(DIV);
+      }
+
       that.instance.PluginHooks.run('afterRenderer', TD, row, col, prop, value, cellProperties);
 
     },
