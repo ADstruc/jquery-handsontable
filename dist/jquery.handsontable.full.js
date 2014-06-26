@@ -5799,6 +5799,507 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
 
 })(Handsontable);
+
+
+
+// (function (Handsontable) {
+//   var TypeaheadEditor = Handsontable.editors.HandsontableEditor.prototype.extend();
+
+//   TypeaheadEditor.prototype.init = function () {
+//     Handsontable.editors.HandsontableEditor.prototype.init.apply(this, arguments);
+
+//     this.query = null;
+//     this.choices = [];
+//   };
+
+//   TypeaheadEditor.prototype.createElements = function(){
+//     Handsontable.editors.HandsontableEditor.prototype.createElements.apply(this, arguments);
+
+//     this.$htContainer.addClass('autocompleteEditor');
+
+//   };
+
+//   TypeaheadEditor.prototype.bindEvents = function(){
+
+//     var that = this;
+//     this.$textarea.on('keydown.autocompleteEditor', function(event){
+//       if(!Handsontable.helper.isMetaKey(event.keyCode) || [Handsontable.helper.keyCode.BACKSPACE, Handsontable.helper.keyCode.DELETE].indexOf(event.keyCode) != -1){
+//         setTimeout(function () {
+//           that.queryChoices(that.$textarea.val());
+//         });
+//       } else if (event.keyCode == Handsontable.helper.keyCode.ENTER && that.cellProperties.strict !== true){
+//         that.$htContainer.handsontable('deselectCell');
+//       }
+
+//     });
+
+//     this.$htContainer.on('mouseleave', function () {
+//       if(that.cellProperties.strict === true){
+//         that.highlightBestMatchingChoice();
+//       }
+//     });
+
+//     this.$htContainer.on('mouseenter', function () {
+//       that.$htContainer.handsontable('deselectCell');
+//     });
+
+//     Handsontable.editors.HandsontableEditor.prototype.bindEvents.apply(this, arguments);
+
+//   };
+
+//   var onBeforeKeyDownInner;
+
+//   TypeaheadEditor.prototype.open = function () {
+
+//     Handsontable.editors.HandsontableEditor.prototype.open.apply(this, arguments);
+
+//     this.$textarea[0].style.visibility = 'visible';
+//     this.focus();
+
+//     var choicesListHot =  this.$htContainer.handsontable('getInstance');
+//     var that = this;
+//     choicesListHot.updateSettings({
+//       'colWidths': [this.wtDom.outerWidth(this.TEXTAREA) - 2],
+//       afterRenderer: function (TD, row, col, prop, value) {
+//         var caseSensitive = this.getCellMeta(row, col).filteringCaseSensitive === true;
+//         var indexOfMatch =  caseSensitive ? value.indexOf(this.query) : value.toLowerCase().indexOf(that.query.toLowerCase());
+
+//         if(indexOfMatch != -1){
+//           var match = value.substr(indexOfMatch, that.query.length);
+//           TD.innerHTML = value.replace(match, '<strong>' + match + '</strong>');
+//         }
+//       }
+//     });
+
+//     onBeforeKeyDownInner = function (event) {
+//       var instance = this;
+
+//       if (event.keyCode == Handsontable.helper.keyCode.ARROW_UP){
+//         if (instance.getSelected() && instance.getSelected()[0] == 0){
+
+//           if(!parent.cellProperties.strict){
+//             instance.deselectCell();
+//           }
+
+//           parent.instance.listen();
+//           parent.focus();
+//           event.preventDefault();
+//           event.stopImmediatePropagation();
+//         }
+//       }
+
+//     };
+
+//     choicesListHot.addHook('beforeKeyDown', onBeforeKeyDownInner);
+
+//     this.queryChoices(this.TEXTAREA.value);
+
+
+//   };
+
+//   TypeaheadEditor.prototype.close = function () {
+
+//     this.$htContainer.handsontable('getInstance').removeHook('beforeKeyDown', onBeforeKeyDownInner);
+
+//     Handsontable.editors.HandsontableEditor.prototype.close.apply(this, arguments);
+//   };
+
+//   TypeaheadEditor.prototype.queryChoices = function(query){
+
+//     this.query = query;
+
+//     if (typeof this.cellProperties.source == 'function'){
+//       var that = this;
+
+//       this.cellProperties.source(query, function(choices){
+//         that.updateChoicesList(choices)
+//       });
+
+//     } else if (Handsontable.helper.isArray(this.cellProperties.source)) {
+
+//       var choices;
+
+//       if(!query || this.cellProperties.filter === false){
+//         choices = this.cellProperties.source;
+//       } else {
+
+//         var filteringCaseSensitive = this.cellProperties.filteringCaseSensitive === true;
+//         var lowerCaseQuery = query.toLowerCase();
+
+//         choices = this.cellProperties.source.filter(function(choice){
+
+//           if (filteringCaseSensitive) {
+//             return choice.indexOf(query) != -1;
+//           } else {
+//             return choice.toLowerCase().indexOf(lowerCaseQuery) != -1;
+//           }
+
+//         });
+//       }
+
+//       this.updateChoicesList(choices)
+
+//     } else {
+//       this.updateChoicesList([]);
+//     }
+
+//   };
+
+//   TypeaheadEditor.prototype.updateChoicesList = function (choices) {
+
+//      this.choices = choices;
+
+//     this.$htContainer.handsontable('loadData', Handsontable.helper.pivot([choices]));
+
+//     if(this.cellProperties.strict === true){
+//       this.highlightBestMatchingChoice();
+//     }
+
+//     this.focus();
+//   };
+
+//   TypeaheadEditor.prototype.highlightBestMatchingChoice = function () {
+//     var bestMatchingChoice = this.findBestMatchingChoice();
+
+//     if ( typeof bestMatchingChoice == 'undefined' && this.cellProperties.allowInvalid === false){
+//       bestMatchingChoice = 0;
+//     }
+
+//     if(typeof bestMatchingChoice == 'undefined'){
+//       this.$htContainer.handsontable('deselectCell');
+//     } else {
+//       this.$htContainer.handsontable('selectCell', bestMatchingChoice, 0);
+//     }
+
+//   };
+
+//   TypeaheadEditor.prototype.findBestMatchingChoice = function(){
+//     var bestMatch = {};
+//     var valueLength = this.getValue().length;
+//     var currentItem;
+//     var indexOfValue;
+//     var charsLeft;
+
+
+//     for(var i = 0, len = this.choices.length; i < len; i++){
+//       currentItem = this.choices[i];
+
+//       if(valueLength > 0){
+//         indexOfValue = currentItem.indexOf(this.getValue())
+//       } else {
+//         indexOfValue = currentItem === this.getValue() ? 0 : -1;
+//       }
+
+//       if(indexOfValue == -1) continue;
+
+//       charsLeft =  currentItem.length - indexOfValue - valueLength;
+
+//       if( typeof bestMatch.indexOfValue == 'undefined'
+//         || bestMatch.indexOfValue > indexOfValue
+//         || ( bestMatch.indexOfValue == indexOfValue && bestMatch.charsLeft > charsLeft ) ){
+
+//         bestMatch.indexOfValue = indexOfValue;
+//         bestMatch.charsLeft = charsLeft;
+//         bestMatch.index = i;
+
+//       }
+
+//     }
+
+
+//     return bestMatch.index;
+//   };
+
+
+//   Handsontable.editors.TypeaheadEditor = TypeaheadEditor;
+//   Handsontable.editors.registerEditor('typeahead', TypeaheadEditor);
+
+// })(Handsontable);
+
+/**
+ * This is inception. Using Handsontable as Handsontable editor
+ */
+(function (Handsontable) {
+  "use strict";
+
+  var isAutoComplete = function(keyboardProxy) {
+    var typeahead = keyboardProxy.data("typeahead");
+    if (typeahead && typeahead.$menu.is(":visible")) {
+      return typeahead;
+    }
+    else {
+      return false;
+    }
+  }
+
+  var TypeaheadEditor = Handsontable.editors.TextEditor.prototype.extend();
+
+  TypeaheadEditor.prototype.createElements = function () {
+    Handsontable.editors.TextEditor.prototype.createElements.apply(this, arguments);
+
+    var DIV = document.createElement('DIV');
+    DIV.className = 'typeaheadEditor';
+    this.TEXTAREA_PARENT.appendChild(DIV);
+
+    this.$keyboardProxy = $(this.TEXTAREA);
+  };
+
+  TypeaheadEditor.prototype.prepare = function (td, row, col, prop, value, cellProperties) {
+
+      Handsontable.editors.TextEditor.prototype.prepare.apply(this, arguments);
+
+      var parent = this;
+      var keyboardProxy = this.$keyboardProxy;
+
+      var typeahead = keyboardProxy.data('typeahead')
+        , i
+        , j
+        , dontHide = false;
+
+      if (!typeahead) {
+        keyboardProxy.typeahead();
+        typeahead = keyboardProxy.data('typeahead');
+        typeahead._show = typeahead.show;
+        typeahead._hide = typeahead.hide;
+        typeahead._render = typeahead.render;
+        typeahead._highlighter = typeahead.highlighter;
+      }
+      else {
+        typeahead.$menu.off(); //remove previous typeahead bindings
+        keyboardProxy.off(); //remove previous typeahead bindings. Removing this will cause prepare to register 2 keydown listeners in typeahead
+        typeahead.listen(); //add typeahead bindings
+      }
+
+      typeahead.minLength = 0;
+      typeahead.highlighter = typeahead._highlighter;
+
+      typeahead.show = function () {
+        console.log('here');
+        if (keyboardProxy.parent().hasClass('htHidden')) {
+          return;
+        }
+        return typeahead._show.call(this);
+      };
+
+      typeahead.hide = function () {
+        if (!dontHide) {
+          dontHide = false; //set to true by dblclick handler, otherwise appears and disappears immediately after double click
+          return typeahead._hide.call(this);
+        }
+      };
+
+      typeahead.lookup = function () {
+        var items;
+        this.query = this.$element.val();
+        items = $.isFunction(parent.cellProperties.source) ? parent.cellProperties.source(this.query, $.proxy(this.process, this)) : parent.cellProperties.source;
+        return items ? this.process(items) : this;
+      };
+
+      typeahead.matcher = function () {
+        return true;
+      };
+
+      typeahead.select = function () {
+        var val = this.$menu.find('.active').attr('data-value') || keyboardProxy.val();
+        destroyer(true);
+        instance.setDataAtCell(row, prop, typeahead.updater(val));
+        return this.hide();
+      };
+
+      typeahead.render = function (items) {
+        typeahead._render.call(this, items);
+        if (!cellProperties.strict) {
+          this.$menu.find('li:eq(0)').removeClass('active');
+        }
+        return this;
+      };
+
+      /* overwrite typeahead options and methods (matcher, sorter, highlighter, updater, etc) if provided in cellProperties */
+      for (i in cellProperties) {
+        if (cellProperties.hasOwnProperty(i)) {
+          if (i === 'options') {
+            for (j in cellProperties.options) {
+              if (cellProperties.options.hasOwnProperty(j)) {
+                typeahead.options[j] = cellProperties.options[j];
+              }
+            }
+          }
+          else {
+            typeahead[i] = cellProperties[i];
+          }
+        }
+      }
+
+      var wasDestroyed = false;
+
+      keyboardProxy.on("keydown.editor", function (event) {
+        switch (event.keyCode) {
+          case 27: /* ESC */
+            dontHide = false;
+            break;
+
+          case 37: /* arrow left */
+          case 39: /* arrow right */
+          case 38: /* arrow up */
+          case 40: /* arrow down */
+          case 9: /* tab */
+          case 13: /* return/enter */
+            if (!keyboardProxy.parent().hasClass('htHidden')) {
+              event.stopImmediatePropagation();
+            }
+            event.preventDefault();
+        }
+      });
+
+      keyboardProxy.on("keyup.editor", function (event) {
+          switch (event.keyCode) {
+            case 9: /* tab */
+            case 13: /* return/enter */
+              if (!wasDestroyed && !isAutoComplete(keyboardProxy)) {
+                var ev = $.Event('keyup');
+                ev.keyCode = 113; //113 triggers lookup, in contrary to 13 or 9 which only trigger hide
+                keyboardProxy.trigger(ev);
+              }
+              else {
+                setTimeout(function () { //so pressing enter will move one row down after change is applied by 'select' above
+                  var ev = $.Event('keydown');
+                  ev.keyCode = event.keyCode;
+                  keyboardProxy.parent().trigger(ev);
+                }, 10);
+              }
+              break;
+
+            default:
+              if (!wasDestroyed && !Handsontable.helper.isPrintableChar(event.keyCode)) { //otherwise Del or F12 would open suggestions list
+                event.stopImmediatePropagation();
+              }
+          }
+        }
+      );
+
+      // var textDestroyer = Handsontable.editors.TextEditor(instance, td, row, col, prop, keyboardProxy, cellProperties);
+
+      // function onDblClick() {
+      //   keyboardProxy[0].focus();
+      //   texteditor.beginEditing(instance, null, row, col, prop, keyboardProxy, true);
+      //   dontHide = true;
+      //   setTimeout(function () { //otherwise is misaligned in IE9
+      //     keyboardProxy.data('typeahead').lookup();
+      //   }, 1);
+      // }
+
+      // instance.view.wt.update('onCellDblClick', onDblClick); //no need to destroy it here because it will be destroyed by TextEditor destroyer
+
+      // var destroyer = function (isCancelled) {
+      //   wasDestroyed = true;
+      //   keyboardProxy.off(); //remove typeahead bindings
+      //   textDestroyer(isCancelled);
+      //   dontHide = false;
+      //   if (isAutoComplete(keyboardProxy)) {
+      //     isAutoComplete(keyboardProxy).hide();
+      //   }
+      // };
+
+      // return destroyer;
+
+  };
+
+
+
+  // var onBeforeKeyDown = function (event) {
+
+  //   if (event.isImmediatePropagationStopped()) {
+  //     return;
+  //   }
+
+  //   var editor = this.getActiveEditor();
+  //   var innerHOT = editor.$htContainer.handsontable('getInstance');
+
+  //   if (event.keyCode == Handsontable.helper.keyCode.ARROW_DOWN) {
+
+  //     if (!innerHOT.getSelected()){
+  //       innerHOT.selectCell(0, 0);
+  //     } else {
+  //       var selectedRow = innerHOT.getSelected()[0];
+  //       var rowToSelect = selectedRow < innerHOT.countRows() - 1 ? selectedRow + 1 : selectedRow;
+
+  //       innerHOT.selectCell(rowToSelect, 0);
+  //     }
+
+  //     event.preventDefault();
+  //     event.stopImmediatePropagation();
+  //   }
+
+  // };
+
+  // TypeaheadEditor.prototype.open = function () {
+
+  //   this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
+
+  //   Handsontable.editors.TextEditor.prototype.open.apply(this, arguments);
+
+  //   this.$htContainer.handsontable('render');
+
+  //   if (this.cellProperties.strict) {
+  //     this.$htContainer.handsontable('selectCell', 0, 0);
+  //     this.$textarea[0].style.visibility = 'hidden';
+  //   } else {
+  //     this.$htContainer.handsontable('deselectCell');
+  //     this.$textarea[0].style.visibility = 'visible';
+  //   }
+
+  //   this.wtDom.setCaretPosition(this.$textarea[0], 0, this.$textarea[0].value.length);
+
+  // };
+
+  // TypeaheadEditor.prototype.close = function () {
+
+  //   this.instance.removeHook('beforeKeyDown', onBeforeKeyDown);
+  //   this.instance.listen();
+
+  //   Handsontable.editors.TextEditor.prototype.close.apply(this, arguments);
+  // };
+
+  // TypeaheadEditor.prototype.focus = function () {
+
+  //   this.instance.listen();
+
+  //   Handsontable.editors.TextEditor.prototype.focus.apply(this, arguments);
+  // };
+
+  // TypeaheadEditor.prototype.beginEditing = function (initialValue) {
+  //   var onBeginEditing = this.instance.getSettings().onBeginEditing;
+  //   if (onBeginEditing && onBeginEditing() === false) {
+  //     return;
+  //   }
+
+  //   Handsontable.editors.TextEditor.prototype.beginEditing.apply(this, arguments);
+
+  // };
+
+  // TypeaheadEditor.prototype.finishEditing = function (isCancelled, ctrlDown) {
+  //   if (this.$htContainer.handsontable('isListening')) { //if focus is still in the HOT editor
+  //     this.instance.listen(); //return the focus to the parent HOT instance
+  //   }
+
+  //   if (this.$htContainer.handsontable('getSelected')) {
+  //     var value = this.$htContainer.handsontable('getInstance').getValue();
+  //     if (value !== void 0) { //if the value is undefined then it means we don't want to set the value
+  //       this.setValue(value);
+  //     }
+  //   }
+
+  //   return Handsontable.editors.TextEditor.prototype.finishEditing.apply(this, arguments);
+  // };
+
+  Handsontable.editors.TypeaheadEditor = TypeaheadEditor;
+  Handsontable.editors.registerEditor('typeahead', TypeaheadEditor);
+
+})(Handsontable);
+
+
+
+
 /**
  * Numeric cell validator
  * @param {*} value - Value of edited cell
@@ -5900,6 +6401,12 @@ Handsontable.DropdownCell = {
   validator: Handsontable.AutocompleteValidator
 };
 
+Handsontable.TypeaheadCell = {
+  editor: Handsontable.editors.TypeaheadEditor,
+  renderer: Handsontable.renderers.AutocompleteRenderer,
+  validator: Handsontable.AutocompleteValidator
+};
+
 //here setup the friendly aliases that are used by cellProperties.type
 Handsontable.cellTypes = {
   text: Handsontable.TextCell,
@@ -5909,7 +6416,8 @@ Handsontable.cellTypes = {
   autocomplete: Handsontable.AutocompleteCell,
   handsontable: Handsontable.HandsontableCell,
   password: Handsontable.PasswordCell,
-  dropdown: Handsontable.DropdownCell
+  dropdown: Handsontable.DropdownCell,
+  typeahead: Handsontable.TypeaheadCell
 };
 
 //here setup the friendly aliases that are used by cellProperties.renderer and cellProperties.editor
@@ -14597,3 +15105,4 @@ Dragdealer.prototype =
         });
     }
 }).call(this);
+
