@@ -4799,7 +4799,6 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
   };
 
   BaseEditor.prototype.finishEditing = function (restoreOriginalValue, ctrlDown, callback) {
-
     if (callback) {
       var previousCloseCallback = this._closeCallback;
       this._closeCallback = function (result) {
@@ -4910,6 +4909,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
   };
 
   TextEditor.prototype.setValue = function(newValue){
+    console.trace();
+    console.log('setting textarea', newValue);
     this.TEXTAREA.value = newValue;
   };
 
@@ -5800,224 +5801,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
 })(Handsontable);
 
-
-
-// (function (Handsontable) {
-//   var TypeaheadEditor = Handsontable.editors.HandsontableEditor.prototype.extend();
-
-//   TypeaheadEditor.prototype.init = function () {
-//     Handsontable.editors.HandsontableEditor.prototype.init.apply(this, arguments);
-
-//     this.query = null;
-//     this.choices = [];
-//   };
-
-//   TypeaheadEditor.prototype.createElements = function(){
-//     Handsontable.editors.HandsontableEditor.prototype.createElements.apply(this, arguments);
-
-//     this.$htContainer.addClass('autocompleteEditor');
-
-//   };
-
-//   TypeaheadEditor.prototype.bindEvents = function(){
-
-//     var that = this;
-//     this.$textarea.on('keydown.autocompleteEditor', function(event){
-//       if(!Handsontable.helper.isMetaKey(event.keyCode) || [Handsontable.helper.keyCode.BACKSPACE, Handsontable.helper.keyCode.DELETE].indexOf(event.keyCode) != -1){
-//         setTimeout(function () {
-//           that.queryChoices(that.$textarea.val());
-//         });
-//       } else if (event.keyCode == Handsontable.helper.keyCode.ENTER && that.cellProperties.strict !== true){
-//         that.$htContainer.handsontable('deselectCell');
-//       }
-
-//     });
-
-//     this.$htContainer.on('mouseleave', function () {
-//       if(that.cellProperties.strict === true){
-//         that.highlightBestMatchingChoice();
-//       }
-//     });
-
-//     this.$htContainer.on('mouseenter', function () {
-//       that.$htContainer.handsontable('deselectCell');
-//     });
-
-//     Handsontable.editors.HandsontableEditor.prototype.bindEvents.apply(this, arguments);
-
-//   };
-
-//   var onBeforeKeyDownInner;
-
-//   TypeaheadEditor.prototype.open = function () {
-
-//     Handsontable.editors.HandsontableEditor.prototype.open.apply(this, arguments);
-
-//     this.$textarea[0].style.visibility = 'visible';
-//     this.focus();
-
-//     var choicesListHot =  this.$htContainer.handsontable('getInstance');
-//     var that = this;
-//     choicesListHot.updateSettings({
-//       'colWidths': [this.wtDom.outerWidth(this.TEXTAREA) - 2],
-//       afterRenderer: function (TD, row, col, prop, value) {
-//         var caseSensitive = this.getCellMeta(row, col).filteringCaseSensitive === true;
-//         var indexOfMatch =  caseSensitive ? value.indexOf(this.query) : value.toLowerCase().indexOf(that.query.toLowerCase());
-
-//         if(indexOfMatch != -1){
-//           var match = value.substr(indexOfMatch, that.query.length);
-//           TD.innerHTML = value.replace(match, '<strong>' + match + '</strong>');
-//         }
-//       }
-//     });
-
-//     onBeforeKeyDownInner = function (event) {
-//       var instance = this;
-
-//       if (event.keyCode == Handsontable.helper.keyCode.ARROW_UP){
-//         if (instance.getSelected() && instance.getSelected()[0] == 0){
-
-//           if(!parent.cellProperties.strict){
-//             instance.deselectCell();
-//           }
-
-//           parent.instance.listen();
-//           parent.focus();
-//           event.preventDefault();
-//           event.stopImmediatePropagation();
-//         }
-//       }
-
-//     };
-
-//     choicesListHot.addHook('beforeKeyDown', onBeforeKeyDownInner);
-
-//     this.queryChoices(this.TEXTAREA.value);
-
-
-//   };
-
-//   TypeaheadEditor.prototype.close = function () {
-
-//     this.$htContainer.handsontable('getInstance').removeHook('beforeKeyDown', onBeforeKeyDownInner);
-
-//     Handsontable.editors.HandsontableEditor.prototype.close.apply(this, arguments);
-//   };
-
-//   TypeaheadEditor.prototype.queryChoices = function(query){
-
-//     this.query = query;
-
-//     if (typeof this.cellProperties.source == 'function'){
-//       var that = this;
-
-//       this.cellProperties.source(query, function(choices){
-//         that.updateChoicesList(choices)
-//       });
-
-//     } else if (Handsontable.helper.isArray(this.cellProperties.source)) {
-
-//       var choices;
-
-//       if(!query || this.cellProperties.filter === false){
-//         choices = this.cellProperties.source;
-//       } else {
-
-//         var filteringCaseSensitive = this.cellProperties.filteringCaseSensitive === true;
-//         var lowerCaseQuery = query.toLowerCase();
-
-//         choices = this.cellProperties.source.filter(function(choice){
-
-//           if (filteringCaseSensitive) {
-//             return choice.indexOf(query) != -1;
-//           } else {
-//             return choice.toLowerCase().indexOf(lowerCaseQuery) != -1;
-//           }
-
-//         });
-//       }
-
-//       this.updateChoicesList(choices)
-
-//     } else {
-//       this.updateChoicesList([]);
-//     }
-
-//   };
-
-//   TypeaheadEditor.prototype.updateChoicesList = function (choices) {
-
-//      this.choices = choices;
-
-//     this.$htContainer.handsontable('loadData', Handsontable.helper.pivot([choices]));
-
-//     if(this.cellProperties.strict === true){
-//       this.highlightBestMatchingChoice();
-//     }
-
-//     this.focus();
-//   };
-
-//   TypeaheadEditor.prototype.highlightBestMatchingChoice = function () {
-//     var bestMatchingChoice = this.findBestMatchingChoice();
-
-//     if ( typeof bestMatchingChoice == 'undefined' && this.cellProperties.allowInvalid === false){
-//       bestMatchingChoice = 0;
-//     }
-
-//     if(typeof bestMatchingChoice == 'undefined'){
-//       this.$htContainer.handsontable('deselectCell');
-//     } else {
-//       this.$htContainer.handsontable('selectCell', bestMatchingChoice, 0);
-//     }
-
-//   };
-
-//   TypeaheadEditor.prototype.findBestMatchingChoice = function(){
-//     var bestMatch = {};
-//     var valueLength = this.getValue().length;
-//     var currentItem;
-//     var indexOfValue;
-//     var charsLeft;
-
-
-//     for(var i = 0, len = this.choices.length; i < len; i++){
-//       currentItem = this.choices[i];
-
-//       if(valueLength > 0){
-//         indexOfValue = currentItem.indexOf(this.getValue())
-//       } else {
-//         indexOfValue = currentItem === this.getValue() ? 0 : -1;
-//       }
-
-//       if(indexOfValue == -1) continue;
-
-//       charsLeft =  currentItem.length - indexOfValue - valueLength;
-
-//       if( typeof bestMatch.indexOfValue == 'undefined'
-//         || bestMatch.indexOfValue > indexOfValue
-//         || ( bestMatch.indexOfValue == indexOfValue && bestMatch.charsLeft > charsLeft ) ){
-
-//         bestMatch.indexOfValue = indexOfValue;
-//         bestMatch.charsLeft = charsLeft;
-//         bestMatch.index = i;
-
-//       }
-
-//     }
-
-
-//     return bestMatch.index;
-//   };
-
-
-//   Handsontable.editors.TypeaheadEditor = TypeaheadEditor;
-//   Handsontable.editors.registerEditor('typeahead', TypeaheadEditor);
-
-// })(Handsontable);
-
 /**
- * This is inception. Using Handsontable as Handsontable editor
+ * Implementing Bootstrap Typeahead Editor as custom plugin
  */
 (function (Handsontable) {
   "use strict";
@@ -6037,10 +5822,6 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
   TypeaheadEditor.prototype.createElements = function () {
     Handsontable.editors.TextEditor.prototype.createElements.apply(this, arguments);
 
-    var DIV = document.createElement('DIV');
-    DIV.className = 'typeaheadEditor';
-    this.TEXTAREA_PARENT.appendChild(DIV);
-
     this.$keyboardProxy = $(this.TEXTAREA);
   };
 
@@ -6053,8 +5834,10 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
       var typeahead = keyboardProxy.data('typeahead')
         , i
-        , j
-        , dontHide = false;
+        , j;
+
+      this.dontHide = false
+      this.wasDestroyed = false;
 
       if (!typeahead) {
         keyboardProxy.typeahead();
@@ -6070,11 +5853,15 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
         typeahead.listen(); //add typeahead bindings
       }
 
+      // Prevent recognizing clicking on typeahead r as clicking outside of table
+      typeahead.$menu.on('mousedown', function (event) {
+        event.stopPropagation();
+      });
+
       typeahead.minLength = 0;
       typeahead.highlighter = typeahead._highlighter;
 
       typeahead.show = function () {
-        console.log('here');
         if (keyboardProxy.parent().hasClass('htHidden')) {
           return;
         }
@@ -6082,8 +5869,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
       };
 
       typeahead.hide = function () {
-        if (!dontHide) {
-          dontHide = false; //set to true by dblclick handler, otherwise appears and disappears immediately after double click
+        if (!parent.dontHide) {
+          parent.dontHide = false; //set to true by dblclick handler, otherwise appears and disappears immediately after double click
           return typeahead._hide.call(this);
         }
       };
@@ -6100,9 +5887,13 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
       };
 
       typeahead.select = function () {
+        console.log('selecting this thing?');
         var val = this.$menu.find('.active').attr('data-value') || keyboardProxy.val();
-        destroyer(true);
-        instance.setDataAtCell(row, prop, typeahead.updater(val));
+        console.log(val);
+        //instance.setDataAtCell(row, prop, typeahead.updater(val));
+        var newVal = typeahead.updater(val);
+        parent.setValue(newVal);
+        parent.finishEditing(false);
         return this.hide();
       };
 
@@ -6114,28 +5905,19 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
         return this;
       };
 
-      /* overwrite typeahead options and methods (matcher, sorter, highlighter, updater, etc) if provided in cellProperties */
-      for (i in cellProperties) {
-        if (cellProperties.hasOwnProperty(i)) {
-          if (i === 'options') {
-            for (j in cellProperties.options) {
-              if (cellProperties.options.hasOwnProperty(j)) {
-                typeahead.options[j] = cellProperties.options[j];
-              }
+      /* overwrite typeahead options and methods (matcher, sorter, highlighter, updater, etc) if provided in cellProperties */      
+      if ('options' in cellProperties) {
+          for (i in cellProperties.options) {
+            if (cellProperties.options.hasOwnProperty(i)) {
+              typeahead.options[i] = cellProperties.options[i];
             }
           }
-          else {
-            typeahead[i] = cellProperties[i];
-          }
-        }
       }
-
-      var wasDestroyed = false;
 
       keyboardProxy.on("keydown.editor", function (event) {
         switch (event.keyCode) {
           case 27: /* ESC */
-            dontHide = false;
+            parent.dontHide = false;
             break;
 
           case 37: /* arrow left */
@@ -6155,29 +5937,27 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
           switch (event.keyCode) {
             case 9: /* tab */
             case 13: /* return/enter */
-              if (!wasDestroyed && !isAutoComplete(keyboardProxy)) {
+              if (!parent.wasDestroyed && !isAutoComplete(keyboardProxy)) {
                 var ev = $.Event('keyup');
                 ev.keyCode = 113; //113 triggers lookup, in contrary to 13 or 9 which only trigger hide
                 keyboardProxy.trigger(ev);
               }
               else {
-                setTimeout(function () { //so pressing enter will move one row down after change is applied by 'select' above
-                  var ev = $.Event('keydown');
-                  ev.keyCode = event.keyCode;
-                  keyboardProxy.parent().trigger(ev);
-                }, 10);
+                // setTimeout(function () { //so pressing enter will move one row down after change is applied by 'select' above
+                //   var ev = $.Event('keydown');
+                //   ev.keyCode = event.keyCode;
+                //   keyboardProxy.parent().trigger(ev);
+                // }, 10);
               }
               break;
 
             default:
-              if (!wasDestroyed && !Handsontable.helper.isPrintableChar(event.keyCode)) { //otherwise Del or F12 would open suggestions list
+              if (!parent.wasDestroyed && !Handsontable.helper.isPrintableChar(event.keyCode)) { //otherwise Del or F12 would open suggestions list
                 event.stopImmediatePropagation();
               }
           }
         }
       );
-
-      // var textDestroyer = Handsontable.editors.TextEditor(instance, td, row, col, prop, keyboardProxy, cellProperties);
 
       // function onDblClick() {
       //   keyboardProxy[0].focus();
@@ -6187,20 +5967,6 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
       //     keyboardProxy.data('typeahead').lookup();
       //   }, 1);
       // }
-
-      // instance.view.wt.update('onCellDblClick', onDblClick); //no need to destroy it here because it will be destroyed by TextEditor destroyer
-
-      // var destroyer = function (isCancelled) {
-      //   wasDestroyed = true;
-      //   keyboardProxy.off(); //remove typeahead bindings
-      //   textDestroyer(isCancelled);
-      //   dontHide = false;
-      //   if (isAutoComplete(keyboardProxy)) {
-      //     isAutoComplete(keyboardProxy).hide();
-      //   }
-      // };
-
-      // return destroyer;
 
   };
 
@@ -6252,14 +6018,6 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
   // };
 
-  // TypeaheadEditor.prototype.close = function () {
-
-  //   this.instance.removeHook('beforeKeyDown', onBeforeKeyDown);
-  //   this.instance.listen();
-
-  //   Handsontable.editors.TextEditor.prototype.close.apply(this, arguments);
-  // };
-
   // TypeaheadEditor.prototype.focus = function () {
 
   //   this.instance.listen();
@@ -6277,20 +6035,24 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
 
   // };
 
-  // TypeaheadEditor.prototype.finishEditing = function (isCancelled, ctrlDown) {
-  //   if (this.$htContainer.handsontable('isListening')) { //if focus is still in the HOT editor
-  //     this.instance.listen(); //return the focus to the parent HOT instance
-  //   }
+  TypeaheadEditor.prototype.open = function () {
+    Handsontable.editors.TextEditor.prototype.open.call(this);
+    var ev = $.Event('keyup');
+    ev.keyCode = 113;
+    this.$keyboardProxy.trigger(ev);
+    //this.showDatepicker();
+  };
 
-  //   if (this.$htContainer.handsontable('getSelected')) {
-  //     var value = this.$htContainer.handsontable('getInstance').getValue();
-  //     if (value !== void 0) { //if the value is undefined then it means we don't want to set the value
-  //       this.setValue(value);
-  //     }
-  //   }
-
-  //   return Handsontable.editors.TextEditor.prototype.finishEditing.apply(this, arguments);
-  // };
+  TypeaheadEditor.prototype.finishEditing = function (isCancelled, ctrlDown) {
+    console.log('finishEditing: should we hide the editor here?');
+    this.wasDestroyed = true;
+    this.$keyboardProxy.off(); //remove typeahead bindings
+    this.dontHide = false;
+    if (isAutoComplete(this.$keyboardProxy)) {
+      isAutoComplete(this.$keyboardProxy).hide();
+    }
+    Handsontable.editors.TextEditor.prototype.finishEditing.apply(this, arguments);
+  };
 
   Handsontable.editors.TypeaheadEditor = TypeaheadEditor;
   Handsontable.editors.registerEditor('typeahead', TypeaheadEditor);
