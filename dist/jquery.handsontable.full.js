@@ -5897,16 +5897,21 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
           this.$menu.find('li:eq(0)').removeClass('active');
         }
         return this;
-      };
+      };      
 
-      /* overwrite typeahead options and methods (matcher, sorter, highlighter, updater, etc) if provided in cellProperties */      
-      if ('options' in cellProperties) {
-          for (i in cellProperties.options) {
-            if (cellProperties.options.hasOwnProperty(i)) {
-              typeahead.options[i] = cellProperties.options[i];
-            }
-          }
-      }
+      // /* overwrite typeahead options and methods (matcher, sorter, highlighter, updater, etc) if provided in cellProperties */
+      // if ('options' in cellProperties) {
+      //     for (i in cellProperties.options) {
+      //       if (cellProperties.options.hasOwnProperty(i)) {
+      //         typeahead.options[i] = cellProperties.options[i];
+      //       }
+      //     }
+      // }
+
+      // for now just set the items option to 300... if we need to set more options
+      // directly from the cell options, we can uncomment the lines above and set 300 as the default
+      // items value instead
+      typeahead.options['items'] = 300;
 
       keyboardProxy.on("keydown.editor", function (event) {
         switch (event.keyCode) {
