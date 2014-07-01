@@ -4909,8 +4909,6 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
   };
 
   TextEditor.prototype.setValue = function(newValue){
-    console.trace();
-    console.log('setting textarea', newValue);
     this.TEXTAREA.value = newValue;
   };
 
@@ -5887,12 +5885,8 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
       };
 
       typeahead.select = function () {
-        console.log('selecting this thing?');
         var val = this.$menu.find('.active').attr('data-value') || keyboardProxy.val();
-        console.log(val);
-        //instance.setDataAtCell(row, prop, typeahead.updater(val));
-        var newVal = typeahead.updater(val);
-        parent.setValue(newVal);
+        parent.setValue(typeahead.updater(val));
         parent.finishEditing(false);
         return this.hide();
       };
@@ -5959,92 +5953,17 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
         }
       );
 
-      // function onDblClick() {
-      //   keyboardProxy[0].focus();
-      //   texteditor.beginEditing(instance, null, row, col, prop, keyboardProxy, true);
-      //   dontHide = true;
-      //   setTimeout(function () { //otherwise is misaligned in IE9
-      //     keyboardProxy.data('typeahead').lookup();
-      //   }, 1);
-      // }
-
   };
 
-
-
-  // var onBeforeKeyDown = function (event) {
-
-  //   if (event.isImmediatePropagationStopped()) {
-  //     return;
-  //   }
-
-  //   var editor = this.getActiveEditor();
-  //   var innerHOT = editor.$htContainer.handsontable('getInstance');
-
-  //   if (event.keyCode == Handsontable.helper.keyCode.ARROW_DOWN) {
-
-  //     if (!innerHOT.getSelected()){
-  //       innerHOT.selectCell(0, 0);
-  //     } else {
-  //       var selectedRow = innerHOT.getSelected()[0];
-  //       var rowToSelect = selectedRow < innerHOT.countRows() - 1 ? selectedRow + 1 : selectedRow;
-
-  //       innerHOT.selectCell(rowToSelect, 0);
-  //     }
-
-  //     event.preventDefault();
-  //     event.stopImmediatePropagation();
-  //   }
-
-  // };
-
-  // TypeaheadEditor.prototype.open = function () {
-
-  //   this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
-
-  //   Handsontable.editors.TextEditor.prototype.open.apply(this, arguments);
-
-  //   this.$htContainer.handsontable('render');
-
-  //   if (this.cellProperties.strict) {
-  //     this.$htContainer.handsontable('selectCell', 0, 0);
-  //     this.$textarea[0].style.visibility = 'hidden';
-  //   } else {
-  //     this.$htContainer.handsontable('deselectCell');
-  //     this.$textarea[0].style.visibility = 'visible';
-  //   }
-
-  //   this.wtDom.setCaretPosition(this.$textarea[0], 0, this.$textarea[0].value.length);
-
-  // };
-
-  // TypeaheadEditor.prototype.focus = function () {
-
-  //   this.instance.listen();
-
-  //   Handsontable.editors.TextEditor.prototype.focus.apply(this, arguments);
-  // };
-
-  // TypeaheadEditor.prototype.beginEditing = function (initialValue) {
-  //   var onBeginEditing = this.instance.getSettings().onBeginEditing;
-  //   if (onBeginEditing && onBeginEditing() === false) {
-  //     return;
-  //   }
-
-  //   Handsontable.editors.TextEditor.prototype.beginEditing.apply(this, arguments);
-
-  // };
-
   TypeaheadEditor.prototype.open = function () {
-    Handsontable.editors.TextEditor.prototype.open.call(this);
-    var ev = $.Event('keyup');
-    ev.keyCode = 113;
-    this.$keyboardProxy.trigger(ev);
-    //this.showDatepicker();
+    var self = this;
+    Handsontable.editors.TextEditor.prototype.open.call(this);        
+    setTimeout(function () { //otherwise is misaligned in IE9
+      self.$keyboardProxy.data('typeahead').lookup();
+    }, 1);
   };
 
   TypeaheadEditor.prototype.finishEditing = function (isCancelled, ctrlDown) {
-    console.log('finishEditing: should we hide the editor here?');
     this.wasDestroyed = true;
     this.$keyboardProxy.off(); //remove typeahead bindings
     this.dontHide = false;
@@ -6058,8 +5977,6 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
   Handsontable.editors.registerEditor('typeahead', TypeaheadEditor);
 
 })(Handsontable);
-
-
 
 
 /**
