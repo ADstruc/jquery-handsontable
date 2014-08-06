@@ -5094,7 +5094,7 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
       minWidth: Math.min(width, maxWidth),
       maxWidth: maxWidth, //TEXTAREA should never be wider than visible part of the viewport (should not cover the scrollbar)
       animate: false,
-      extraSpace: 0
+      extraSpace: 10
     });
 
     this.textareaParentStyle.display = 'block';
@@ -6279,7 +6279,9 @@ Handsontable.cellLookup = {
 
       if (wClone) {
 
-        wClone.text(value);
+        // set safe text value on div but replace spaces with nonbreaking spaces
+        // for proper width calculation
+        wClone.html(wClone.text(value).html().replace(/ /gm, '&nbsp;'));
 
         // Calculate new width + whether to change
         var cloneWidth = wClone.outerWidth(),
