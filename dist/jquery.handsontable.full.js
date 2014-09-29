@@ -1113,7 +1113,7 @@ Handsontable.Core = function (rootElement, userSettings) {
       datamap.set(changes[i][0], changes[i][1], changes[i][3]);
     }
 
-    instance.forceFullRender = true; //used when data was changed
+    instance.forceFullRender = instance.getSettings().forceFullRenderOnCellChange; //used when data was changed
     grid.adjustRowsAndCols();
     selection.refreshBorders(null, true);
     instance.PluginHooks.run('afterChange', changes, source || 'edit');
@@ -2341,7 +2341,10 @@ DefaultSettings.prototype = {
   nativeScrollbars: false,
   type: 'text',
   copyable: true,
-  debug: false //shows debug overlays in Walkontable
+  debug: false, //shows debug overlays in Walkontable
+
+  // ADstruc settings
+  forceFullRenderOnCellChange: true // This is the value that Handsontable used originally
 };
 Handsontable.DefaultSettings = DefaultSettings;
 
