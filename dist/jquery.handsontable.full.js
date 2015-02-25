@@ -2580,6 +2580,10 @@ Handsontable.TableView = function (instance) {
     offsetColumn: 0,
     width: this.getWidth(),
     height: this.getHeight(),
+
+    // Added by madhav@adstruc.com on 11/13/2014
+    rowHeight: this.settings.rowHeight,
+
     fixedColumnsLeft: function () {
       return that.settings.fixedColumnsLeft;
     },
@@ -4484,11 +4488,11 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
         instance.view.wt.getSetting('onCellDblClick');
       };
 
-      instance.rootElement.on('mousedown.htAutocompleteArrow', '.htAutocompleteArrow', instance.acArrowListener); //this way we don't bind event listener to each arrow. We rely on propagation instead
+      instance.rootElement.on('mouseup.htAutocompleteArrow', '.htAutocompleteArrow', instance.acArrowListener); //this way we don't bind event listener to each arrow. We rely on propagation instead
 
       //We need to unbind the listener after the table has been destroyed
       instance.addHookOnce('afterDestroy', function () {
-        this.rootElement.off('mousedown.htAutocompleteArrow');
+        this.rootElement.off('mouseup.htAutocompleteArrow');
       });
 
     }
@@ -12569,7 +12573,10 @@ function WalkontableSettings(instance, settings) {
 
     //constants
     scrollbarWidth: 10,
-    scrollbarHeight: 10
+    scrollbarHeight: 10,
+
+    // Added by madhav@adstruc.com on 11/13/2014
+    rowHeight: null
   };
 
   //reference to settings
@@ -12639,6 +12646,12 @@ WalkontableSettings.prototype.rowHeight = function (row, TD) {
   if (!this.instance.rowHeightCache) {
     this.instance.rowHeightCache = []; //hack. This cache is being invalidated in WOT core.js
   }
+
+  // Added by madhav@adstruc.com on 11/13/2014
+  if (this.settings['rowHeight'] !== void 0) {
+    return this.settings['rowHeight'];
+  }
+  
   if (this.instance.rowHeightCache[row] === void 0) {
     var size = 23; //guess
     if (TD) {
