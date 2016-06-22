@@ -5237,7 +5237,7 @@ Handsontable.SelectionPoint.prototype.arr = function (arr) {
   var ToggleableButtonEditor = Handsontable.editors.BaseEditor.prototype.extend();
 
   ToggleableButtonEditor.prototype.beginEditing = function () {
-    var div = this.TD.querySelector('div');
+    var div = this.TD.querySelector('div.htToggleableButtonRendererDiv');
 
     if (div) {
       $(div).trigger('click');
