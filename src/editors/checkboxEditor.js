@@ -1,49 +1,33 @@
-function toggleCheckboxCell(instance, row, prop, cellProperties) {
-  if (Handsontable.helper.stringify(instance.getDataAtCell(row, prop)) === Handsontable.helper.stringify(cellProperties.checkedTemplate)) {
-    instance.setDataAtCell(row, prop, cellProperties.uncheckedTemplate);
-  }
-  else {
-    instance.setDataAtCell(row, prop, cellProperties.checkedTemplate);
-  }
-}
+import {registerEditor} from './../editors';
+import {BaseEditor} from './_baseEditor';
+import {hasClass} from './../helpers/dom/element';
 
 /**
- * Checkbox editor
- * @param {Object} instance Handsontable instance
- * @param {Element} td Table cell where to render
- * @param {Number} row
- * @param {Number} col
- * @param {String|Number} prop Row object property name
- * @param {Object} keyboardProxy jQuery element of keyboard proxy that contains current editing value
- * @param {Object} cellProperties Cell properites (shared by cell renderer and editor)
+ * @private
+ * @editor CheckboxEditor
+ * @class CheckboxEditor
  */
-Handsontable.CheckboxEditor = function (instance, td, row, col, prop, keyboardProxy, cellProperties) {
-  if (typeof cellProperties === "undefined") {
-    cellProperties = {};
-  }
-  if (typeof cellProperties.checkedTemplate === "undefined") {
-    cellProperties.checkedTemplate = true;
-  }
-  if (typeof cellProperties.uncheckedTemplate === "undefined") {
-    cellProperties.uncheckedTemplate = false;
-  }
+class CheckboxEditor extends BaseEditor {
+  beginEditing(initialValue, event) {
+    // editorManager return double click event as undefined
+    if (event === void 0) {
+      let checkbox = this.TD.querySelector('input[type="checkbox"]');
 
-  keyboardProxy.on("keydown.editor", function (event) {
-    var ctrlDown = (event.ctrlKey || event.metaKey) && !event.altKey; //catch CTRL but not right ALT (which in some systems triggers ALT+CTRL)
-    if (!ctrlDown && Handsontable.helper.isPrintableChar(event.keyCode)) {
-      toggleCheckboxCell(instance, row, prop, cellProperties);
-      event.stopPropagation();
+      if (!hasClass(checkbox, 'htBadValue')) {
+        checkbox.click();
+      }
     }
-  });
-
-  function onDblClick() {
-    toggleCheckboxCell(instance, row, prop, cellProperties);
   }
 
-  instance.view.wt.update('onCellDblClick', onDblClick);
+  finishEditing() {}
+  init() {}
+  open() {}
+  close() {}
+  getValue() {}
+  setValue() {}
+  focus() {}
+}
 
-  return function () {
-    keyboardProxy.off(".editor");
-    instance.view.wt.update('onCellDblClick', null);
-  }
-};
+export {CheckboxEditor};
+
+registerEditor('checkbox', CheckboxEditor);

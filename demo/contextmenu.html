@@ -7,17 +7,23 @@
   <!--
   Loading Handsontable (full distribution that includes all dependencies apart from jQuery)
   -->
-  <script src="../lib/jquery.min.js"></script>
-  <script src="../dist/jquery.handsontable.full.js"></script>
-  <link rel="stylesheet" media="screen" href="../dist/jquery.handsontable.full.css">
+  <link data-jsfiddle="common" rel="stylesheet" media="screen" href="../dist/handsontable.css">
+  <link data-jsfiddle="common" rel="stylesheet" media="screen" href="../dist/pikaday/pikaday.css">
+  <script data-jsfiddle="common" src="../dist/pikaday/pikaday.js"></script>
+  <script data-jsfiddle="common" src="../dist/moment/moment.js"></script>
+  <script data-jsfiddle="common" src="../dist/zeroclipboard/ZeroClipboard.js"></script>
+  <script data-jsfiddle="common" src="../dist/numbro/numbro.js"></script>
+  <script data-jsfiddle="common" src="../dist/numbro/languages.js"></script>
+  <script data-jsfiddle="common" src="../dist/handsontable.js"></script>
 
   <!--
   Loading demo dependencies. They are used here only to enhance the examples on this page
   -->
-  <link rel="stylesheet" media="screen" href="css/samples.css">
+  <link data-jsfiddle="common" rel="stylesheet" media="screen" href="css/samples.css?20140331">
   <script src="js/samples.js"></script>
   <script src="js/highlight/highlight.pack.js"></script>
   <link rel="stylesheet" media="screen" href="js/highlight/styles/github.css">
+  <link rel="stylesheet" href="css/font-awesome/css/font-awesome.min.css">
 
   <!--
   Facebook open graph. Don't copy this to your project :)
@@ -39,85 +45,51 @@
 </head>
 
 <body>
-<a href="http://github.com/warpech/jquery-handsontable">
-  <img style="position: absolute; top: 0; right: 0; border: 0;"
-       src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"/>
-</a>
+
+
+<div class="wrapper">
+<div class="wrapper-row">
+<div id="global-menu-clone">
+  <h1><a href="../index.html">Handsontable</a></h1>
+
+</div>
 
 <div id="container">
+<div class="columnLayout">
 
 <div class="rowLayout">
   <div class="descLayout">
     <div class="pad">
-      <h1><a href="../index.html">Handsontable</a></h1>
-
-      <div class="tagline">a minimalistic Excel-like <span class="nobreak">data grid</span> editor
-        for HTML, JavaScript &amp; jQuery
-      </div>
-
       <h2>Context Menu</h2>
 
       <p>This page shows how to use and configure right-click context menu with Handsontable:</p>
 
       <ul>
-        <li><a href="#dependencies">dependencies</a></li>
         <li><a href="#default">context menu with default options</a></li>
         <li><a href="#specific">context menu with specific options</a></li>
         <li><a href="#custom">context menu with fully custom configuration</a></li>
       </ul>
-
-      <a name="dependencies"></a>
-
-      <h2>Dependencies</h2>
     </div>
   </div>
 </div>
 
 <div class="rowLayout">
   <div class="descLayout">
-    <div class="pad">
-
-      <p>Context Menu feature has a <strong>required</strong> dependency on <a
-          href="http://medialize.github.com/jQuery-contextMenu/">jQuery&nbsp;contextMenu</a>
-        plugin (tested with version 1.5.25). This plugin is included in jquery.handsontable.full.js.
-
-
-      <p>jQuery contextMenu plugin has <a href="http://medialize.github.com/jQuery-contextMenu/docs.html#ui-position">optional</a>
-        dependency on <a
-            href="http://docs.jquery.com/UI/Position">jQuery UI Position</a>, which makes sure
-        that the menu is always visible in the viewport. This plugin is NOT included in
-        jquery.handsontable.full.js. Please report in GitHub issues board if you wish it was added to
-        jquery.handsontable.full.js.</p>
-    </div>
-  </div>
-
-  <div class="codeLayout">
-    <div class="pad">
-        <pre class="html"><code>
-        &lt;script src="lib/jQuery-contextMenu/jquery.contextMenu.js"&gt;&lt;/script&gt;
-        &lt;link rel="stylesheet" media="screen"
-        href="lib/jQuery-contextMenu/jquery.contextMenu.css"&gt;
-
-        &lt;!-- optional --&gt;
-        &lt;script src="lib/jQuery-contextMenu/jquery.ui.position.js"&gt;&lt;/script&gt;
-        </code></pre>
-    </div>
-  </div>
-</div>
-
-<div class="rowLayout">
-  <div class="descLayout">
-    <div class="pad bottomSpace200">
+    <div class="pad" data-jsfiddle="example1">
       <a name="default"></a>
 
       <h2>Context Menu with default options</h2>
 
       <p>Tu run the basic configuration of the Context Menu, just set the contextMenu option to true.</p>
 
+      <p>From version 0.11, context menu also works for row and column headers. When the context menu for the row
+        header is opened, the column options are disabled. Likewise, when the context menu for the column header is opened,
+        the row options are disabled</p>
+
       <div id="example1"></div>
 
       <p>
-        <button name="dump" data-dump="#example1" title="Prints current data source to Firebug/Chrome Dev Tools">Dump
+        <button name="dump" data-dump="#example1" data-instance="hot1" title="Prints current data source to Firebug/Chrome Dev Tools">Dump
           data to console
         </button>
       </p>
@@ -127,22 +99,26 @@
   <div class="codeLayout">
     <div class="pad">
       <div class="jsFiddle">
-        <div class="jsFiddleLink">Edit in jsFiddle</div>
+        <button class="jsFiddleLink" data-runfiddle="example1">Edit in jsFiddle</button>
       </div>
 
-      <script class="common">
+      <script data-jsfiddle="common">
         function getData() {
           return [
-            ["", "Kia", "Nissan", "Toyota", "Honda"],
-            ["2008", 10, 11, 12, 13],
-            ["2009", 20, 11, 14, 13],
-            ["2010", 30, 15, 12, 13]
+            ['', 'Kia', 'Nissan', 'Toyota', 'Honda'],
+            ['2008', 10, 11, 12, 13],
+            ['2009', 20, 11, 14, 13],
+            ['2010', 30, 15, 12, 13]
           ];
         }
       </script>
 
-      <script>
-        $("#example1").handsontable({
+      <script data-jsfiddle="example1">
+        var example1 = document.getElementById('example1'),
+          settings1,
+          hot1;
+
+        settings1 = {
           data: getData(),
           startRows: 5,
           startCols: 5,
@@ -154,7 +130,8 @@
           colHeaders: true,
           minSpareRows: 1,
           contextMenu: true
-        });
+        };
+        hot1 = new Handsontable(example1, settings1);
       </script>
     </div>
   </div>
@@ -162,7 +139,7 @@
 
 <div class="rowLayout">
   <div class="descLayout">
-    <div class="pad bottomSpace100">
+    <div class="pad" data-jsfiddle="example2">
       <a name="specific"></a>
 
       <h2>Context Menu with specific options</h2>
@@ -170,23 +147,28 @@
       <p>You can limit options available in the context menu using contextMenu option as an array of strings:</p>
 
       <ul>
-        <li>row_above</li>
-        <li>row_below</li>
-        <li>hsep1</li>
-        <li>col_left</li>
-        <li>col_right</li>
-        <li>hsep2</li>
-        <li>remove_row</li>
-        <li>remove_col</li>
-        <li>hsep3</li>
-        <li>undo</li>
-        <li>redo</li>
+        <li><b>row_above</b> (designed for <a href="contextmenu.html">Context Menu</a>)</li>
+        <li><b>row_below</b> (designed for <a href="contextmenu.html">Context Menu</a>)</li>
+        <li><b>hsep1</b></li>
+        <li><b>col_left</b> (designed for both menus)</li>
+        <li><b>col_right</b> (designed for both menus)</li>
+        <li><b>hsep2</b></li>
+        <li><b>remove_row</b> (designed for <a href="contextmenu.html">Context Menu</a>)</li>
+        <li><b>remove_col</b> (designed for both menus)</li>
+        <li><b>hsep3</b></li>
+        <li><b>undo</b> (designed for <a href="contextmenu.html">Context Menu</a>)</li>
+        <li><b>redo</b> (designed for <a href="contextmenu.html">Context Menu</a>)</li>
+        <li><b>make_read_only</b> (designed for both menus)</li>
+        <li><b>alignment</b>  (designed for both menus)</li>
+        <li><b>clear_column</b> (designed for <a href="dropdownmenu.html">Dropdown Menu</a>)</li>
+        <li><b>borders</b> (only with <a href="custom_borders.html">Custom Borders</a> turned on)</li>
+        <li><b>commentsAddEdit</b>, <b>commentsRemove</b> (only with <a href="comments.html">Comments</a> turned on)</li>
       </ul>
 
       <div id="example2"></div>
 
       <p>
-        <button name="dump" data-dump="#example2" title="Prints current data source to Firebug/Chrome Dev Tools">Dump
+        <button name="dump" data-dump="#example2" data-instance="hot2" title="Prints current data source to Firebug/Chrome Dev Tools">Dump
           data to console
         </button>
       </p>
@@ -196,11 +178,12 @@
   <div class="codeLayout">
     <div class="pad">
       <div class="jsFiddle">
-        <div class="jsFiddleLink">Edit in jsFiddle</div>
+        <button class="jsFiddleLink" data-runfiddle="example2">Edit in jsFiddle</button>
       </div>
 
-      <script>
-        $("#example2").handsontable({
+      <script data-jsfiddle="example2">
+        var example2 = document.getElementById('example2');
+        var settings2 = {
           data: getData(),
           startRows: 5,
           startCols: 5,
@@ -208,7 +191,8 @@
           colHeaders: true,
           minSpareRows: 1,
           contextMenu: ['row_above', 'row_below', 'remove_row']
-        });
+        };
+        var hot2 = new Handsontable(example2, settings2);
       </script>
     </div>
   </div>
@@ -216,7 +200,7 @@
 
 <div class="rowLayout">
   <div class="descLayout">
-    <div class="pad bottomSpace450">
+    <div class="pad" data-jsfiddle="example3">
       <a name="custom"></a>
 
       <h2>Context Menu with with fully custom configuration</h2>
@@ -230,7 +214,7 @@
       <div id="example3"></div>
 
       <p>
-        <button name="dump" data-dump="#example3" title="Prints current data source to Firebug/Chrome Dev Tools">Dump
+        <button name="dump" data-dump="#example3" data-instance="hot3" title="Prints current data source to Firebug/Chrome Dev Tools">Dump
           data to console
         </button>
       </p>
@@ -240,17 +224,23 @@
   <div class="codeLayout">
     <div class="pad">
       <div class="jsFiddle">
-        <div class="jsFiddleLink">Edit in jsFiddle</div>
+        <button class="jsFiddleLink" data-runfiddle="example3">Edit in jsFiddle</button>
       </div>
 
-      <script>
-        $("#example3").handsontable({
+      <script data-jsfiddle="example3">
+        var example3 = document.getElementById('example3');
+        var settings3 = {
           data: getData(),
           startRows: 5,
           startCols: 5,
           rowHeaders: true,
           colHeaders: true,
-          minSpareRows: 1,
+          minSpareRows: 1
+        };
+
+        var hot3 = new Handsontable(example3,settings3);
+
+        hot3.updateSettings({
           contextMenu: {
             callback: function (key, options) {
               if (key === 'about') {
@@ -264,7 +254,7 @@
               "row_above": {
                 disabled: function () {
                   //if first row, disable this option
-                  return ($("#example3").handsontable('getSelected')[0] === 0);
+                  return (hot3.getSelected() && hot3.getSelected()[0]===0)
                 }
               },
               "row_below": {},
@@ -273,28 +263,29 @@
                 name: 'Remove this row, ok?',
                 disabled: function () {
                   //if first row, disable this option
-                  return ($("#example3").handsontable('getSelected')[0] === 0);
+                  return  (hot3.getSelected() && hot3.getSelected()[0] === 0)
                 }
               },
               "hsep2": "---------",
               "about": {name: 'About this menu'}
             }
           }
-        });
+        })
       </script>
     </div>
   </div>
 </div>
 
-<div class="rowLayout">
-  <div class="descLayout">
-    <div class="pad"><p>For more examples, head back to the <a href="../index.html">main page</a>.</p>
+<div class="footer-text">
+</div>
+</div>
 
-      <p class="small">Handsontable &copy; 2012 Marcin Warpechowski and contributors.<br> Code and documentation
-        licensed under the The MIT License.</p>
-    </div>
-  </div>
+</div>
+
 </div>
 </div>
+
+<div id="outside-links-wrapper"></div>
+
 </body>
 </html>

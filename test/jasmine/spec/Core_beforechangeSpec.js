@@ -1,65 +1,86 @@
 describe('Core_beforechange', function () {
-  var $container,
-    id = 'testContainer';
+  var id = 'testContainer';
 
   beforeEach(function () {
-    $container = $('<div id="' + id + '"></div>').appendTo('body');
+    this.$container = $('<div id="' + id + '"></div>').appendTo('body');
   });
 
   afterEach(function () {
-    if ($container) {
-      $container.remove();
+    if (this.$container) {
+      destroy();
+      this.$container.remove();
     }
   });
 
-  it('this should point to handsontable rootElement', function () {
+  it('this.rootElement should point to handsontable rootElement', function () {
     var output = null;
 
-    runs(function () {
-      $container.handsontable({
-        onBeforeChange: function () {
-          output = this;
-        }
-      });
-      $container.handsontable('setDataAtCell', 0, 0, "test");
+    handsontable({
+      beforeChange: function () {
+        output = this.rootElement;
+      }
     });
+    setDataAtCell(0, 0, "test");
 
-    waitsFor(function () {
-      return (output != null)
-    }, "onBeforeChange callback called", 100);
 
-    runs(function () {
-      expect(output).toEqual($container.get(0));
+    expect(output).toEqual(this.$container[0]);
+  });
+
+  it('should remove change from stack', function () {
+    var output = null;
+
+    handsontable({
+      data : [["a", "b"], ["c", "d"]],
+      beforeChange: function (changes) {
+        changes[1] = null;
+      },
+      afterChange : function (changes) {
+        output = changes;
+      }
     });
+    setDataAtCell([[0, 0, "test"], [1, 0, "test"], [1, 1, "test"]]);
+
+    expect(getDataAtCell(0,0)).toEqual("test");
+    expect(getDataAtCell(1,0)).toEqual("c");
+    expect(getDataAtCell(1,1)).toEqual("test");
+    expect(output).toEqual([[0, 0, "a", "test"], [1, 1, "d", "test"]]);
+  });
+
+  it('should drop all changes when beforeChange return false', function () {
+    var fired = false;
+
+    handsontable({
+      data : [["a", "b"], ["c", "d"]],
+      beforeChange: function (changes) {
+        fired = true;
+        return false;
+      }
+    });
+    setDataAtCell([[0, 0, "test"], [1, 0, "test"], [1, 1, "test"]]);
+
+    expect(getDataAtCell(0,0)).toEqual("a");
+    expect(getDataAtCell(1,0)).toEqual("c");
+    expect(getDataAtCell(1,1)).toEqual("d");
   });
 
   function beforechangeOnKeyFactory(keyCode) {
     return function () {
       var called = false;
 
-      runs(function () {
-        $container.handsontable({
-          onBeforeChange: function (changes) {
-            if (changes[0][2] === "test" && changes[0][3] === "") {
-              called = true;
-            }
+      handsontable({
+        beforeChange: function (changes) {
+          if (changes[0][2] === "test" && changes[0][3] === "") {
+            called = true;
           }
-        });
-        $container.handsontable('setDataAtCell', 0, 0, "test");
-        $container.handsontable('selectCell', 0, 0);
-
-        var keydown = $.Event('keydown');
-        keydown.keyCode = keyCode;
-        $container.find('textarea.handsontableInput').trigger(keydown);
+        }
       });
 
-      waitsFor(function () {
-        return (called === true)
-      }, "onBeforeChange callback called", 100);
+      setDataAtCell(0, 0, "test");
+      selectCell(0, 0);
 
-      runs(function () {
-        expect(called).toEqual(true);
-      });
+      keyDown(keyCode);
+
+      expect(called).toEqual(true);
     }
   }
 

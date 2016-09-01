@@ -7,6 +7,7 @@ describe('Core_destroyEditor', function () {
 
   afterEach(function () {
     if (this.$container) {
+      destroy();
       this.$container.remove();
     }
   });
@@ -15,73 +16,65 @@ describe('Core_destroyEditor', function () {
     handsontable();
     selectCell(1, 1);
 
-    waitsFor(nextFrame, 'next frame', 60);
+    keyDownUp('enter');
 
-    runs(function () {
-      keyDownUp('enter');
-    });
-
-    waitsFor(nextFrame, 'next frame', 60);
-
-    runs(function () {
-      destroyEditor();
-      expect(isEditorVisible()).toEqual(false);
-    });
+    destroyEditor();
+    expect(isEditorVisible()).toEqual(false);
   });
 
   it('value should be saved', function () {
     handsontable();
     selectCell(1, 1);
 
-    waitsFor(nextFrame, 'next frame', 60);
+    keyDownUp('enter');
+    keyProxy().val('Ted');
 
-    runs(function () {
-      keyDownUp('enter');
-      this.$keyboardProxy.val('Ted');
-    });
-
-    waitsFor(nextFrame, 'next frame', 60);
-
-    runs(function () {
-      destroyEditor();
-      expect(getDataAtCell(1, 1)).toEqual('Ted');
-    });
+    destroyEditor();
+    expect(getDataAtCell(1, 1)).toEqual('Ted');
   });
 
   it('cell should be selected', function () {
     handsontable();
     selectCell(1, 1);
 
-    waitsFor(nextFrame, 'next frame', 60);
+    keyDownUp('enter');
 
-    runs(function () {
-      keyDownUp('enter');
-    });
-
-    waitsFor(nextFrame, 'next frame', 60);
-
-    runs(function () {
-      destroyEditor();
-      expect(getSelected()).toEqual([1, 1, 1, 1]);
-    });
+    destroyEditor();
+    expect(getSelected()).toEqual([1, 1, 1, 1]);
   });
 
   it('should revert original value when param set to true', function () {
     handsontable();
     selectCell(1, 1);
 
-    waitsFor(nextFrame, 'next frame', 60);
+    keyDownUp('enter');
+    keyProxy().val('Ted');
 
-    runs(function () {
-      keyDownUp('enter');
-      this.$keyboardProxy.val('Ted');
-    });
-
-    waitsFor(nextFrame, 'next frame', 60);
-
-    runs(function () {
-      destroyEditor(true);
-      expect(getDataAtCell(1, 1)).toEqual(null);
-    });
+    destroyEditor(true);
+    expect(getDataAtCell(1, 1)).toEqual(null);
   });
+
+  it("should not destroy editor on scroll", function () {
+    this.$container.css({
+      width: 200,
+      height: 100
+    });
+
+    handsontable({
+      data: Handsontable.helper.createSpreadsheetData(20, 10)
+    });
+
+    selectCell(0, 0);
+    keyDown('enter');
+
+    var editor = $('.handsontableInputHolder');
+
+    expect(editor.is(':visible')).toBe(true);
+
+    this.$container.scroll();
+
+    expect(editor.is(':visible')).toBe(true);
+
+  });
+
 });

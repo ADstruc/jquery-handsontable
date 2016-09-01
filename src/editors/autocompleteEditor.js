@@ -1,171 +1,429 @@
-function isAutoComplete(keyboardProxy) {
-  var typeahead = keyboardProxy.data("typeahead");
-  if (typeahead && typeahead.$menu.is(":visible")) {
-    return typeahead;
-  }
-  else {
-    return false;
+import {KEY_CODES, isPrintableChar} from './../helpers/unicode';
+import {stringify} from './../helpers/mixed';
+import {pivot} from './../helpers/array';
+import {
+  addClass,
+  getCaretPosition,
+  getScrollbarWidth,
+  getSelectionEndPosition,
+  outerWidth,
+  outerHeight,
+  offset,
+  getTrimmingContainer,
+  setCaretPosition,
+} from './../helpers/dom/element';
+import {registerEditor} from './../editors';
+import {HandsontableEditor} from './handsontableEditor';
+
+var AutocompleteEditor = HandsontableEditor.prototype.extend();
+
+/**
+ * @private
+ * @editor AutocompleteEditor
+ * @class AutocompleteEditor
+ * @dependencies HandsontableEditor
+ */
+AutocompleteEditor.prototype.init = function() {
+  HandsontableEditor.prototype.init.apply(this, arguments);
+
+  this.query = null;
+  this.choices = [];
+};
+
+AutocompleteEditor.prototype.createElements = function() {
+  HandsontableEditor.prototype.createElements.apply(this, arguments);
+
+  addClass(this.htContainer, 'autocompleteEditor');
+  addClass(this.htContainer, window.navigator.platform.indexOf('Mac') === -1 ? '' : 'htMacScroll');
+};
+
+var skipOne = false;
+function onBeforeKeyDown(event) {
+  skipOne = false;
+  let editor = this.getActiveEditor();
+
+  if (isPrintableChar(event.keyCode) || event.keyCode === KEY_CODES.BACKSPACE ||
+    event.keyCode === KEY_CODES.DELETE || event.keyCode === KEY_CODES.INSERT) {
+    let timeOffset = 0;
+
+    // on ctl+c / cmd+c don't update suggestion list
+    if (event.keyCode === KEY_CODES.C && (event.ctrlKey || event.metaKey)) {
+      return;
+    }
+    if (!editor.isOpened()) {
+      timeOffset += 10;
+    }
+
+    if (editor.htEditor) {
+      editor.instance._registerTimeout(setTimeout(function() {
+        editor.queryChoices(editor.TEXTAREA.value);
+        skipOne = true;
+      }, timeOffset));
+    }
   }
 }
 
-/**
- * Autocomplete editor
- * @param {Object} instance Handsontable instance
- * @param {Element} td Table cell where to render
- * @param {Number} row
- * @param {Number} col
- * @param {String|Number} prop Row object property name
- * @param {Object} keyboardProxy jQuery element of keyboard proxy that contains current editing value
- * @param {Object} cellProperties Cell properites (shared by cell renderer and editor)
- */
-Handsontable.AutocompleteEditor = function (instance, td, row, col, prop, keyboardProxy, cellProperties) {
-  var typeahead = keyboardProxy.data('typeahead')
-    , i
-    , j
-    , dontHide = false;
+AutocompleteEditor.prototype.prepare = function() {
+  this.instance.addHook('beforeKeyDown', onBeforeKeyDown);
+  HandsontableEditor.prototype.prepare.apply(this, arguments);
+};
 
-  if (!typeahead) {
-    keyboardProxy.typeahead();
-    typeahead = keyboardProxy.data('typeahead');
-    typeahead._show = typeahead.show;
-    typeahead._hide = typeahead.hide;
-    typeahead._render = typeahead.render;
-    typeahead._highlighter = typeahead.highlighter;
-  }
-  else {
-    typeahead.$menu.off(); //remove previous typeahead bindings
-    keyboardProxy.off(); //remove previous typeahead bindings. Removing this will cause prepare to register 2 keydown listeners in typeahead
-    typeahead.listen(); //add typeahead bindings
-  }
+AutocompleteEditor.prototype.open = function() {
+  // Ugly fix for handsontable which grab window object for autocomplete scroll listener instead table element.
+  this.TEXTAREA_PARENT.style.overflow = 'auto';
+  HandsontableEditor.prototype.open.apply(this, arguments);
+  this.TEXTAREA_PARENT.style.overflow = '';
 
-  typeahead.minLength = 0;
-  typeahead.highlighter = typeahead._highlighter;
+  let choicesListHot = this.htEditor.getInstance();
+  let _this = this;
+  let trimDropdown = this.cellProperties.trimDropdown === void 0 ? true : this.cellProperties.trimDropdown;
 
-  typeahead.show = function () {
-    if (keyboardProxy.parent().hasClass('htHidden')) {
-      return;
-    }
-    return typeahead._show.call(this);
-  };
+  this.TEXTAREA.style.visibility = 'visible';
+  this.focus();
 
-  typeahead.hide = function () {
-    if (!dontHide) {
-      dontHide = false; //set to true by dblclick handler, otherwise appears and disappears immediately after double click
-      return typeahead._hide.call(this);
-    }
-  };
+  choicesListHot.updateSettings({
+    colWidths: trimDropdown ? [outerWidth(this.TEXTAREA) - 2] : void 0,
+    width: trimDropdown ? outerWidth(this.TEXTAREA) + getScrollbarWidth() + 2 : void 0,
+    afterRenderer: function(TD, row, col, prop, value) {
+      let caseSensitive = this.getCellMeta(row, col).filteringCaseSensitive === true;
+      let indexOfMatch;
+      let match;
+      value = stringify(value);
 
-  typeahead.lookup = function () {
-    var items;
-    this.query = this.$element.val();
-    items = $.isFunction(this.source) ? this.source(this.query, $.proxy(this.process, this)) : this.source;
-    return items ? this.process(items) : this;
-  };
+      if (value) {
+        indexOfMatch = caseSensitive ? value.indexOf(this.query) : value.toLowerCase().indexOf(_this.query.toLowerCase());
 
-  typeahead.matcher = function () {
-    return true;
-  };
-
-  typeahead.select = function () {
-    var val = this.$menu.find('.active').attr('data-value') || keyboardProxy.val();
-    destroyer(true);
-    instance.setDataAtCell(row, prop, typeahead.updater(val));
-    return this.hide();
-  };
-
-  typeahead.render = function (items) {
-    typeahead._render.call(this, items);
-    if (!cellProperties.strict) {
-      this.$menu.find('li:eq(0)').removeClass('active');
-    }
-    return this;
-  };
-
-  /* overwrite typeahead options and methods (matcher, sorter, highlighter, updater, etc) if provided in cellProperties */
-  for (i in cellProperties) {
-    if (cellProperties.hasOwnProperty(i)) {
-      if (i === 'options') {
-        for (j in cellProperties.options) {
-          if (cellProperties.options.hasOwnProperty(j)) {
-            typeahead.options[j] = cellProperties.options[j];
-          }
+        if (indexOfMatch != -1) {
+          match = value.substr(indexOfMatch, _this.query.length);
+          TD.innerHTML = value.replace(match, '<strong>' + match + '</strong>');
         }
       }
-      else {
-        typeahead[i] = cellProperties[i];
+    },
+    autoColumnSize: true,
+    modifyColWidth: function(width, col) {
+      // workaround for <strong> text overlapping the dropdown, not really accurate
+      let autoWidths = this.getPlugin('autoColumnSize').widths;
+
+      if (autoWidths[col]) {
+        width = autoWidths[col];
       }
-    }
-  }
 
-  var wasDestroyed = false;
-
-  keyboardProxy.on("keydown.editor", function (event) {
-    switch (event.keyCode) {
-      case 27: /* ESC */
-        dontHide = false;
-        break;
-
-      case 37: /* arrow left */
-      case 39: /* arrow right */
-      case 38: /* arrow up */
-      case 40: /* arrow down */
-      case 9: /* tab */
-      case 13: /* return/enter */
-        if (!keyboardProxy.parent().hasClass('htHidden')) {
-          event.stopImmediatePropagation();
-        }
-        event.preventDefault();
+      return trimDropdown ? width : width + 15;
     }
   });
 
-  keyboardProxy.on("keyup.editor", function (event) {
-      switch (event.keyCode) {
-        case 9: /* tab */
-        case 13: /* return/enter */
-          if (!wasDestroyed && !isAutoComplete(keyboardProxy)) {
-            var ev = $.Event('keyup');
-            ev.keyCode = 113; //113 triggers lookup, in contrary to 13 or 9 which only trigger hide
-            keyboardProxy.trigger(ev);
-          }
-          else {
-            setTimeout(function () { //so pressing enter will move one row down after change is applied by 'select' above
-              var ev = $.Event('keydown');
-              ev.keyCode = event.keyCode;
-              keyboardProxy.parent().trigger(ev);
-            }, 10);
-          }
-          break;
+  // Add additional space for autocomplete holder
+  this.htEditor.view.wt.wtTable.holder.parentNode.style['padding-right'] = getScrollbarWidth() + 2 + 'px';
 
-        default:
-          if (!wasDestroyed && !Handsontable.helper.isPrintableChar(event.keyCode)) { //otherwise Del or F12 would open suggestions list
-            event.stopImmediatePropagation();
-          }
-      }
-    }
-  );
-
-  var textDestroyer = Handsontable.TextEditor(instance, td, row, col, prop, keyboardProxy, cellProperties);
-
-  function onDblClick() {
-    keyboardProxy[0].focus();
-    texteditor.beginEditing(instance, null, row, col, prop, keyboardProxy, true);
-    dontHide = true;
-    setTimeout(function () { //otherwise is misaligned in IE9
-      keyboardProxy.data('typeahead').lookup();
-    }, 1);
+  if (skipOne) {
+    skipOne = false;
   }
 
-  instance.view.wt.update('onCellDblClick', onDblClick); //no need to destroy it here because it will be destroyed by TextEditor destroyer
+  _this.instance._registerTimeout(setTimeout(function() {
+    _this.queryChoices(_this.TEXTAREA.value);
+  }, 0));
+};
 
-  var destroyer = function (isCancelled) {
-    wasDestroyed = true;
-    keyboardProxy.off(); //remove typeahead bindings
-    textDestroyer(isCancelled);
-    dontHide = false;
-    if (isAutoComplete(keyboardProxy)) {
-      isAutoComplete(keyboardProxy).hide();
+AutocompleteEditor.prototype.close = function() {
+  HandsontableEditor.prototype.close.apply(this, arguments);
+};
+AutocompleteEditor.prototype.queryChoices = function(query) {
+  this.query = query;
+
+  const source = this.cellProperties.source;
+  const hasFilter = this.cellProperties.filter;
+  const filteringCaseSensitive = this.cellProperties.filteringCaseSensitive;
+
+  if (typeof source == 'function') {
+    var _this = this;
+
+    source.call(this.cellProperties, query, function(choices) {
+      _this.updateChoicesList(choices);
+    });
+
+  } else if (Array.isArray(source)) {
+    let choices;
+
+    if (!query || hasFilter === false) {
+      choices = source;
+    } else {
+      let lowerCaseQuery = query.toLowerCase();
+
+      choices = source.filter(function(choice) {
+
+        if (filteringCaseSensitive) {
+          return choice.toString().indexOf(query) != -1;
+        } else {
+          return choice.toString().toLowerCase().indexOf(lowerCaseQuery) != -1;
+        }
+
+      });
     }
+
+    this.updateChoicesList(choices);
+
+  } else {
+    this.updateChoicesList([]);
+  }
+
+};
+
+AutocompleteEditor.prototype.updateChoicesList = function(choices) {
+  let pos = getCaretPosition(this.TEXTAREA);
+  let endPos = getSelectionEndPosition(this.TEXTAREA);
+  let sortByRelevanceSetting = this.cellProperties.sortByRelevance;
+  let filterSetting = this.cellProperties.filter;
+  let orderByRelevance = null;
+  let highlightIndex = null;
+  let flipped = null;
+
+  if (sortByRelevanceSetting) {
+    orderByRelevance = AutocompleteEditor.sortByRelevance(this.getValue(), choices, this.cellProperties.filteringCaseSensitive);
+  }
+
+  if (filterSetting === false) {
+    if (orderByRelevance) {
+      highlightIndex = orderByRelevance[0];
+    } else {
+      highlightIndex = 0;
+    }
+  } else {
+    let sorted = [];
+
+    for (let i = 0, choicesCount = choices.length; i < choicesCount; i++) {
+      if (orderByRelevance) {
+        sorted.push(choices[orderByRelevance[i]]);
+      } else {
+        sorted.push(choices[i]);
+      }
+    }
+
+    highlightIndex = 0;
+    choices = sorted;
+  }
+  /* jshint ignore:end */
+
+  this.choices = choices;
+  this.htEditor.loadData(pivot([choices]));
+
+  this.updateDropdownHeight();
+
+  this.flipDropdownIfNeeded();
+
+  if (this.cellProperties.strict === true) {
+    this.highlightBestMatchingChoice(highlightIndex);
+  }
+
+  this.instance.listen();
+  this.TEXTAREA.focus();
+  setCaretPosition(this.TEXTAREA, pos, (pos === endPos ? void 0 : endPos));
+};
+
+AutocompleteEditor.prototype.flipDropdownIfNeeded = function() {
+  let textareaOffset = offset(this.TEXTAREA);
+  let textareaHeight = outerHeight(this.TEXTAREA);
+  let dropdownHeight = this.getDropdownHeight();
+  let trimmingContainer = getTrimmingContainer(this.instance.view.wt.wtTable.TABLE);
+  let trimmingContainerScrollTop = trimmingContainer.scrollTop;
+  let headersHeight = outerHeight(this.instance.view.wt.wtTable.THEAD);
+  let containerOffset = {
+    row: 0,
+    col: 0
   };
 
-  return destroyer;
+  if (trimmingContainer !== window) {
+    containerOffset = offset(trimmingContainer);
+  }
+
+  let spaceAbove = textareaOffset.top - containerOffset.top - headersHeight + trimmingContainerScrollTop;
+  let spaceBelow = trimmingContainer.scrollHeight - spaceAbove - headersHeight - textareaHeight;
+  let flipNeeded = dropdownHeight > spaceBelow && spaceAbove > spaceBelow;
+
+  if (flipNeeded) {
+    this.flipDropdown(dropdownHeight);
+  } else {
+    this.unflipDropdown();
+  }
+
+  this.limitDropdownIfNeeded(flipNeeded ? spaceAbove : spaceBelow, dropdownHeight);
+
+  return flipNeeded;
 };
+
+AutocompleteEditor.prototype.limitDropdownIfNeeded = function(spaceAvailable, dropdownHeight) {
+  if (dropdownHeight > spaceAvailable) {
+    let tempHeight = 0;
+    let i = 0;
+    let lastRowHeight = 0;
+    let height = null;
+
+    do {
+      lastRowHeight = this.htEditor.getRowHeight(i) || this.htEditor.view.wt.wtSettings.settings.defaultRowHeight;
+      tempHeight += lastRowHeight;
+      i++;
+    } while (tempHeight < spaceAvailable);
+
+    height = tempHeight - lastRowHeight;
+
+    if (this.htEditor.flipped) {
+      this.htEditor.rootElement.style.top = parseInt(this.htEditor.rootElement.style.top, 10) + dropdownHeight - height + 'px';
+    }
+
+    this.setDropdownHeight(tempHeight - lastRowHeight);
+  }
+};
+
+AutocompleteEditor.prototype.flipDropdown = function(dropdownHeight) {
+  let dropdownStyle = this.htEditor.rootElement.style;
+
+  dropdownStyle.position = 'absolute';
+  dropdownStyle.top = -dropdownHeight + 'px';
+
+  this.htEditor.flipped = true;
+};
+
+AutocompleteEditor.prototype.unflipDropdown = function() {
+  let dropdownStyle = this.htEditor.rootElement.style;
+
+  if (dropdownStyle.position === 'absolute') {
+    dropdownStyle.position = '';
+    dropdownStyle.top = '';
+  }
+
+  this.htEditor.flipped = void 0;
+};
+
+AutocompleteEditor.prototype.updateDropdownHeight = function() {
+  var currentDropdownWidth = this.htEditor.getColWidth(0) + getScrollbarWidth() + 2;
+  var trimDropdown = this.cellProperties.trimDropdown;
+
+  this.htEditor.updateSettings({
+    height: this.getDropdownHeight(),
+    width: trimDropdown ? void 0 : currentDropdownWidth
+  });
+
+  this.htEditor.view.wt.wtTable.alignOverlaysWithTrimmingContainer();
+};
+
+AutocompleteEditor.prototype.setDropdownHeight = function(height) {
+  this.htEditor.updateSettings({
+    height: height
+  });
+};
+
+AutocompleteEditor.prototype.finishEditing = function(restoreOriginalValue) {
+  if (!restoreOriginalValue) {
+    this.instance.removeHook('beforeKeyDown', onBeforeKeyDown);
+  }
+  HandsontableEditor.prototype.finishEditing.apply(this, arguments);
+};
+
+AutocompleteEditor.prototype.highlightBestMatchingChoice = function(index) {
+  if (typeof index === 'number') {
+    this.htEditor.selectCell(index, 0);
+  } else {
+    this.htEditor.deselectCell();
+  }
+};
+
+/**
+ * Filters and sorts by relevance
+ * @param value
+ * @param choices
+ * @param caseSensitive
+ * @returns {Array} array of indexes in original choices array
+ */
+AutocompleteEditor.sortByRelevance = function(value, choices, caseSensitive) {
+  let choicesRelevance = [];
+  let currentItem;
+  let valueLength = value.length;
+  let valueIndex;
+  let charsLeft;
+  let result = [];
+  let i;
+  let choicesCount = choices.length;
+
+  if (valueLength === 0) {
+    for (i = 0; i < choicesCount; i++) {
+      result.push(i);
+    }
+    return result;
+  }
+
+  for (i = 0; i < choicesCount; i++) {
+    currentItem = stringify(choices[i]);
+
+    if (caseSensitive) {
+      valueIndex = currentItem.indexOf(value);
+    } else {
+      valueIndex = currentItem.toLowerCase().indexOf(value.toLowerCase());
+    }
+
+    if (valueIndex == -1) {
+      continue;
+    }
+    charsLeft = currentItem.length - valueIndex - valueLength;
+
+    choicesRelevance.push({
+      baseIndex: i,
+      index: valueIndex,
+      charsLeft: charsLeft,
+      value: currentItem
+    });
+  }
+
+  choicesRelevance.sort(function(a, b) {
+
+    if (b.index === -1) {
+      return -1;
+    }
+    if (a.index === -1) {
+      return 1;
+    }
+
+    if (a.index < b.index) {
+      return -1;
+    } else if (b.index < a.index) {
+      return 1;
+    } else if (a.index === b.index) {
+      if (a.charsLeft < b.charsLeft) {
+        return -1;
+      } else if (a.charsLeft > b.charsLeft) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  });
+
+  for (i = 0, choicesCount = choicesRelevance.length; i < choicesCount; i++) {
+    result.push(choicesRelevance[i].baseIndex);
+  }
+
+  return result;
+};
+
+AutocompleteEditor.prototype.getDropdownHeight = function() {
+  let firstRowHeight = this.htEditor.getInstance().getRowHeight(0) || 23;
+  let visibleRows = this.cellProperties.visibleRows;
+
+  return this.choices.length >= visibleRows ? visibleRows * firstRowHeight : this.choices.length * firstRowHeight + 8;
+};
+
+AutocompleteEditor.prototype.allowKeyEventPropagation = function(keyCode) {
+  let selected = {row: this.htEditor.getSelectedRange() ? this.htEditor.getSelectedRange().from.row : -1};
+  let allowed = false;
+
+  if (keyCode === KEY_CODES.ARROW_DOWN && selected.row > 0 && selected.row < this.htEditor.countRows() - 1) {
+    allowed = true;
+  }
+  if (keyCode === KEY_CODES.ARROW_UP && selected.row > -1) {
+    allowed = true;
+  }
+
+  return allowed;
+};
+
+export {AutocompleteEditor};
+
+registerEditor('autocomplete', AutocompleteEditor);

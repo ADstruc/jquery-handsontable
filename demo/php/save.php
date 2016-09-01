@@ -6,28 +6,28 @@
  *
  * Copyright 2012, Marcin Warpechowski
  * Licensed under the MIT license.
- * http://warpech.github.com/jquery-handsontable/
+ * http://github.com/handsontable/handsontable/
  */
+
+require_once('functions.php');
 
 try {
   //open the database
-  $db = new PDO('sqlite:cars.sqlite'); //will create the file in current directory. Current directory must be writable
-  
-  //create the database if does not exist
-  $db->exec("CREATE TABLE IF NOT EXISTS cars (id INTEGER PRIMARY KEY, manufacturer TEXT, year INTEGER, price INTEGER)");
-  
+  $db =  getConnection();
+  createCarsTable($db);
+
   $colMap = array(
     0 => 'manufacturer',
     1 => 'year',
     2 => 'price'
   );
-  
-  if ($_POST['changes']) {
+
+  if (isset($_POST['changes']) && $_POST['changes']) {
     foreach ($_POST['changes'] as $change) {
       $rowId  = $change[0] + 1;
       $colId  = $change[1];
       $newVal = $change[3];
-      
+
       if (!isset($colMap[$colId])) {
         echo "\n spadam";
         continue;
@@ -37,7 +37,7 @@ try {
       $select->execute(array(
         $rowId
       ));
-      
+
       if ($row = $select->fetch()) {
         $query = $db->prepare('UPDATE cars SET `' . $colMap[$colId] . '` = :newVal WHERE id = :id');
       } else {
@@ -47,24 +47,24 @@ try {
       $query->bindValue(':newVal', $newVal, PDO::PARAM_STR);
       $query->execute();
     }
-  } elseif ($_POST['data']) {
+  } elseif (isset($_POST['data']) && $_POST['data']) {
     $select = $db->prepare('DELETE FROM cars');
     $select->execute();
-    
+
     for ($r = 0, $rlen = count($_POST['data']); $r < $rlen; $r++) {
       $rowId = $r + 1;
       for ($c = 0, $clen = count($_POST['data'][$r]); $c < $clen; $c++) {
         if (!isset($colMap[$c])) {
           continue;
         }
-        
+
         $newVal = $_POST['data'][$r][$c];
-        
+
         $select = $db->prepare('SELECT id FROM cars WHERE id=? LIMIT 1');
         $select->execute(array(
           $rowId
         ));
-        
+
         if ($row = $select->fetch()) {
           $query = $db->prepare('UPDATE cars SET `' . $colMap[$c] . '` = :newVal WHERE id = :id');
         } else {
@@ -81,9 +81,8 @@ try {
     'result' => 'ok'
   );
   echo json_encode($out);
-  
-  // close the database connection
-  $db = NULL;
+
+  closeConnection($db);
 }
 catch (PDOException $e) {
   print 'Exception : ' . $e->getMessage();
