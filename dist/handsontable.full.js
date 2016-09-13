@@ -22771,6 +22771,16 @@ function TableView(instance) {
       var cellProperties = that.instance.getCellMeta(row, col);
       var prop = that.instance.colToProp(col);
       var value = that.instance.getDataAtRowProp(row, prop);
+      if (that.settings.rowHeight) {
+        var DIV = document.createElement('div');
+        DIV.className = TD.className = 'fixedRowHeight';
+        DIV.style.height = TD.style.height = that.settings.rowHeight + 'px';
+        while(TD.childNodes.length) {
+          DIV.appendChild(TD.childNodes[0]);
+        }
+        TD.appendChild(DIV);
+      }
+
       Handsontable.hooks.run(that.instance, 'beforeRenderer', TD, row, col, prop, value, cellProperties);
       that.instance.getCellRenderer(cellProperties)(that.instance, TD, row, col, prop, value, cellProperties);
       Handsontable.hooks.run(that.instance, 'afterRenderer', TD, row, col, prop, value, cellProperties);
