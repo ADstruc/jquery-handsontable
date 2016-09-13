@@ -7064,7 +7064,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       }
       datamap.set(changes[i][0], changes[i][1], changes[i][3]);
     }
-    instance.forceFullRender = true;
+    instance.forceFullRender = instance.getSettings().forceFullRenderOnCellChange;
     grid.adjustRowsAndCols();
     Handsontable.hooks.run(instance, 'beforeChangeRender', changes, source);
     selection.refreshBorders(null, true);
@@ -8141,7 +8141,9 @@ DefaultSettings.prototype = {
   sortFunction: void 0,
   sortByRelevance: true,
   filter: true,
-  filteringCaseSensitive: false
+  filteringCaseSensitive: false,
+  // ADstruc settings
+  forceFullRenderOnCellChange: true // This is the value that Handsontable used originally
 };
 Handsontable.DefaultSettings = DefaultSettings;
 
