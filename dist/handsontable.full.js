@@ -4139,6 +4139,8 @@ var WalkontableOverlays = function WalkontableOverlays(wotInstance) {
           event.preventDefault();
         } else if (overlay == 'bottom' && deltaY !== 0) {
           event.preventDefault();
+        } else if (deltaX === 0) {
+          event.preventDefault();
         }
       })]);
     }
