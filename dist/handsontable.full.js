@@ -2388,7 +2388,7 @@ var WalkontableOverlays = function WalkontableOverlays(wotInstance) {
         } else if ($__5.bottomLeftCornerOverlay && $__5.bottomLeftCornerOverlay.clone && $__5.bottomLeftCornerOverlay.clone.wtTable.holder.contains(event.realTarget)) {
           overlay = 'bottomLeft';
         }
-        if ((overlay == 'top' && deltaY !== 0) || (overlay == 'left' && deltaX !== 0) || (overlay == 'bottom' && deltaY !== 0) || ((overlay === 'topLeft' || overlay === 'bottomLeft') && (deltaY !== 0 || deltaX !== 0))) {
+        if ((overlay == 'top' && deltaY !== 0) || (overlay == 'left' && deltaX !== 0) || (overlay == 'bottom' && deltaY !== 0) || ((overlay === 'topLeft' || overlay === 'bottomLeft') && (deltaY !== 0 || deltaX !== 0)) || (deltaX === 0 && deltaY === 0)) {
           event.preventDefault();
         }
       })]);
@@ -5418,7 +5418,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       }
       datamap.set(changes[i][0], changes[i][1], changes[i][3]);
     }
-    instance.forceFullRender = true;
+    instance.forceFullRender = instance.getSettings().forceFullRenderOnCellChange;
     grid.adjustRowsAndCols();
     Handsontable.hooks.run(instance, 'beforeChangeRender', changes, source);
     selection.refreshBorders(null, true);
@@ -6531,7 +6531,9 @@ DefaultSettings.prototype = {
   sortFunction: void 0,
   sortByRelevance: true,
   filter: true,
-  filteringCaseSensitive: false
+  filteringCaseSensitive: false,
+  // ADstruc settings
+  forceFullRenderOnCellChange: true // This is the value that Handsontable used originally
 };
 Handsontable.DefaultSettings = DefaultSettings;
 
@@ -22187,6 +22189,15 @@ function TableView(instance) {
       var cellProperties = that.instance.getCellMeta(row, col);
       var prop = that.instance.colToProp(col);
       var value = that.instance.getDataAtRowProp(row, prop);
+      if (that.settings.rowHeight) {
+        var DIV = document.createElement('div');
+        DIV.className = TD.className = 'fixedRowHeight';
+        DIV.style.height = TD.style.height = that.settings.rowHeight + 'px';
+        while(TD.childNodes.length) {
+          DIV.appendChild(TD.childNodes[0]);
+        }
+        TD.appendChild(DIV);
+      }
       if (that.instance.hasHook('beforeValueRender')) {
         value = that.instance.runHooks('beforeValueRender', value);
       }
