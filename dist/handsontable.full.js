@@ -6309,7 +6309,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       dataSource.destroy();
     }
     dataSource = null;
-    empty(instance.rootElement);
+    empty(instance.rootElement, true);
     eventManager.destroy();
     Handsontable.hooks.run(instance, 'afterDestroy');
     Handsontable.hooks.destroy(instance);
@@ -10406,10 +10406,15 @@ function removeTextNodes(element, parent) {
     }
   }
 }
-function empty(element) {
+function empty(element, preserveAdstrucElements) {
   var child;
-  while (child = element.lastChild) {
-    element.removeChild(child);
+
+  if (preserveAdstrucElements && window.jQuery) {
+    window.jQuery(element).children(':not(.adstruc-handsontable)').remove();
+  } else {
+    while (child = element.lastChild) {
+      element.removeChild(child);
+    }
   }
 }
 var HTML_CHARACTERS = /(<(.*)>|&(.*);)/;
