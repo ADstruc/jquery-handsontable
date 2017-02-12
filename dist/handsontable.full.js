@@ -6309,7 +6309,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       dataSource.destroy();
     }
     dataSource = null;
-    empty(instance.rootElement, true);
+    empty(instance.rootElement);
     eventManager.destroy();
     Handsontable.hooks.run(instance, 'afterDestroy');
     Handsontable.hooks.destroy(instance);
@@ -10406,10 +10406,10 @@ function removeTextNodes(element, parent) {
     }
   }
 }
-function empty(element, preserveAdstrucElements) {
+function empty(element) {
   var child;
 
-  if (preserveAdstrucElements && window.jQuery) {
+  if (window.jQuery) {
     window.jQuery(element).children(':not(.adstruc-handsontable)').remove();
   } else {
     while (child = element.lastChild) {
