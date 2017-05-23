@@ -22028,7 +22028,7 @@ function TableView(instance) {
     }
   });
   this.eventManager.addEventListener(document.documentElement, 'keyup', function(event) {
-    if (instance.selection.isInProgress() && !event.shiftKey) {
+    if (instance.selection.isInProgress() && !event.shiftKey && event.keyCode !== 17) {
       instance.selection.finish();
     }
   });
@@ -22037,7 +22037,7 @@ function TableView(instance) {
     return isMouseDown;
   };
   this.eventManager.addEventListener(document.documentElement, 'mouseup', function(event) {
-    if (instance.selection.isInProgress() && event.which === 1) {
+    if (instance.selection.isInProgress() && event.which === 1 && !event.ctrlKey) {
       instance.selection.finish();
     }
     isMouseDown = false;
