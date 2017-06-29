@@ -29347,6 +29347,10 @@ var Sheet = function Sheet(hot, dataProvider) {
       args[$__15] = arguments[$__15];
     return ($__20 = $__11)._onAfterAlter.apply($__20, $traceurRuntime.spread(args));
   }));
+  this.parser.on('callPropToColAndRow', function(prop) {
+    var $__20;
+    return ($__20 = $__11)._onCallPropToColAndRow.apply($__20, $traceurRuntime.spread([].slice.call(arguments)));
+  });
 };
 ($traceurRuntime.createClass)(Sheet, {
   recalculate: function() {
@@ -29425,6 +29429,12 @@ var Sheet = function Sheet(hot, dataProvider) {
     return this.matrix.getDependencies({
       row: row,
       column: column
+    });
+  },
+  _onCallPropToColAndRow: function(prop, done) {
+    done({
+      row: this._processingCell._row,
+      column: this.hot.propToCol(prop)
     });
   },
   _onCallCellValue: function($__16, done) {
@@ -29588,7 +29598,7 @@ function unescapeFormulaExpression(expression) {
   return isFormulaExpressionEscaped(expression) ? expression.substr(1) : expression;
 }
 function toUpperCaseFormula(expression) {
-  var PATTERN = /(\\"|"(?:\\"|[^"])*"|(\+))|(\\'|'(?:\\'|[^'])*'|(\+))/g;
+  var PATTERN = /(<<.+?>>)|(\\"|"(?:\\"|[^"])*"|(\+))|(\\'|'(?:\\'|[^'])*'|(\+))/g;
   var strings = expression.match(PATTERN) || [];
   var index = -1;
   return expression.toUpperCase().replace(PATTERN, function() {
@@ -34626,12 +34636,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_callCellValue',
 	    value: function _callCellValue(label) {
+
+        if (label.slice(0, 2) === '<<' && label.slice(-2) === '>>') {
+          this.emit('callPropToColAndRow', label.slice(2, label.length - 2), function (cellPosition) {
+            label = (0, _cell.toLabel)({
+                isAbsolute: false,
+                index: cellPosition.row
+              },
+              {
+                isAbsolute: false,
+                index: cellPosition.column
+              }
+            );
+          });
+        }
+
 	      label = label.toUpperCase();
 	
 	      var _extractLabel = (0, _cell.extractLabel)(label),
 	          _extractLabel2 = _slicedToArray(_extractLabel, 2),
 	          row = _extractLabel2[0],
 	          column = _extractLabel2[1];
+
 	
 	      var value = void 0;
 	
@@ -49982,10 +50008,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    case 36:
 	                        return 5;
 	                        break;
+                      case 37:
+                          return 25;
+                          break;
 	                }
 	            },
-	            rules: [/^(?:\s+)/, /^(?:"(\\["]|[^"])*")/, /^(?:'(\\[']|[^'])*')/, /^(?:[A-Za-z]{1,}[A-Za-z_0-9\.]+(?=[(]))/, /^(?:#[A-Z0-9\/]+(!|\?)?)/, /^(?:\$[A-Za-z]+\$[0-9]+)/, /^(?:\$[A-Za-z]+[0-9]+)/, /^(?:[A-Za-z]+\$[0-9]+)/, /^(?:[A-Za-z]+[0-9]+)/, /^(?:[A-Za-z\.]+(?=[(]))/, /^(?:[A-Za-z]{1,}[A-Za-z_0-9]+)/, /^(?:[A-Za-z_]+)/, /^(?:[0-9]+)/, /^(?:\[(.*)?\])/, /^(?:&)/, /^(?: )/, /^(?:[.])/, /^(?::)/, /^(?:;)/, /^(?:,)/, /^(?:\*)/, /^(?:\/)/, /^(?:-)/, /^(?:\+)/, /^(?:\^)/, /^(?:\()/, /^(?:\))/, /^(?:>)/, /^(?:<)/, /^(?:NOT\b)/, /^(?:")/, /^(?:')/, /^(?:!)/, /^(?:=)/, /^(?:%)/, /^(?:[#])/, /^(?:$)/],
-	            conditions: { "INITIAL": { "rules": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36], "inclusive": true } }
+	            rules: [/^(?:\s+)/, /^(?:"(\\["]|[^"])*")/, /^(?:'(\\[']|[^'])*')/, /^(?:[A-Za-z]{1,}[A-Za-z_0-9\.]+(?=[(]))/, /^(?:#[A-Z0-9\/]+(!|\?)?)/, /^(?:\$[A-Za-z]+\$[0-9]+)/, /^(?:\$[A-Za-z]+[0-9]+)/, /^(?:[A-Za-z]+\$[0-9]+)/, /^(?:[A-Za-z]+[0-9]+)/, /^(?:[A-Za-z\.]+(?=[(]))/, /^(?:[A-Za-z]{1,}[A-Za-z_0-9]+)/, /^(?:[A-Za-z_]+)/, /^(?:[0-9]+)/, /^(?:\[(.*)?\])/, /^(?:&)/, /^(?: )/, /^(?:[.])/, /^(?::)/, /^(?:;)/, /^(?:,)/, /^(?:\*)/, /^(?:\/)/, /^(?:-)/, /^(?:\+)/, /^(?:\^)/, /^(?:\()/, /^(?:\))/, /^(?:>)/, /^(?:<)/, /^(?:NOT\b)/, /^(?:")/, /^(?:')/, /^(?:!)/, /^(?:=)/, /^(?:%)/, /^(?:[#])/, /^(?:$)/, /^(?:<<.+?>>)/],
+	            conditions: { "INITIAL": { "rules": [37, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36], "inclusive": true } }
 	        };
 	        return lexer;
 	    }();
