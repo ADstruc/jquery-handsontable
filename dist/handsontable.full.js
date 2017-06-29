@@ -29347,7 +29347,7 @@ var Sheet = function Sheet(hot, dataProvider) {
       args[$__15] = arguments[$__15];
     return ($__20 = $__11)._onAfterAlter.apply($__20, $traceurRuntime.spread(args));
   }));
-  this.parser.on('callPropToColAndRow', function(prop) {
+  this.parser.on('callPropToColAndRow', function() {
     var $__20;
     return ($__20 = $__11)._onCallPropToColAndRow.apply($__20, $traceurRuntime.spread([].slice.call(arguments)));
   });
