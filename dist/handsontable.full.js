@@ -4679,6 +4679,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       grid,
       selection,
       editorManager,
+      hotForumlaParser,
       instance = this,
       GridSettings = function() {},
       eventManager = eventManagerObject(instance);
@@ -4697,6 +4698,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   if (!this.rootElement.id || this.rootElement.id.substring(0, 3) === 'ht_') {
     this.rootElement.id = this.guid;
   }
+  hotForumlaParser = _dereq_("hot-formula-parser");
   priv = {
     cellSettings: [],
     columnSettings: [],
@@ -5813,6 +5815,12 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   this.propToCol = function(prop) {
     return datamap.propToCol(prop);
   };
+  this.toLabel = function(row, column) {
+    return hotForumlaParser.toLabel(row, column);
+  };
+  this.extractLabel = function(label) {
+    return hotForumlaParser.extractLabel(label);
+  }
   this.toVisualRow = (function(row) {
     return recordTranslator.toVisualRow(row);
   });
