@@ -4679,7 +4679,6 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       grid,
       selection,
       editorManager,
-      hotForumlaParser,
       instance = this,
       GridSettings = function() {},
       eventManager = eventManagerObject(instance);
@@ -4698,7 +4697,6 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   if (!this.rootElement.id || this.rootElement.id.substring(0, 3) === 'ht_') {
     this.rootElement.id = this.guid;
   }
-  hotForumlaParser = _dereq_("hot-formula-parser");
   priv = {
     cellSettings: [],
     columnSettings: [],
@@ -5815,12 +5813,6 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   this.propToCol = function(prop) {
     return datamap.propToCol(prop);
   };
-  this.toLabel = function(row, column) {
-    return hotForumlaParser.toLabel(row, column);
-  };
-  this.extractLabel = function(label) {
-    return hotForumlaParser.extractLabel(label);
-  }
   this.toVisualRow = (function(row) {
     return recordTranslator.toVisualRow(row);
   });
@@ -29591,10 +29583,20 @@ Object.defineProperties(exports, {
   cellCoordFactory: {get: function() {
       return cellCoordFactory;
     }},
+  toLabel: {get: function() {
+      return toLabel;
+    }},
+  extractLabel: {get: function() {
+      return extractLabel;
+    }},
+  columnIndexToLabel: {get: function() {
+      return columnIndexToLabel;
+    }},
   __esModule: {value: true}
 });
 var $___46__46__47__46__46__47_browser__;
 var Handsontable = ($___46__46__47__46__46__47_browser__ = _dereq_("../../browser"), $___46__46__47__46__46__47_browser__ && $___46__46__47__46__46__47_browser__.__esModule && $___46__46__47__46__46__47_browser__ || {default: $___46__46__47__46__46__47_browser__}).default;
+var hotForumlaParser = _dereq_("hot-formula-parser");
 function isFormulaExpression(expression) {
   expression = (expression + '');
   return expression && expression.length >= 2 && expression.charAt(0) === '=' ? true : false;
@@ -29622,11 +29624,23 @@ function cellCoordFactory(axis, defaultIndex) {
     };
   };
 }
+function toLabel(row, column) {
+  return hotForumlaParser.toLabel(row, column);
+}
+function extractLabel(label) {
+  return hotForumlaParser.extractLabel(label);
+}
+function columnIndexToLabel(column) {
+  return hotForumlaParser.columnIndexToLabel(column)
+}
 Handsontable.utils.FormulasUtils = Handsontable.utils.FormulasUtils || {};
 Handsontable.utils.FormulasUtils.isFormulaExpression = isFormulaExpression;
 Handsontable.utils.FormulasUtils.isFormulaExpressionEscaped = isFormulaExpressionEscaped;
 Handsontable.utils.FormulasUtils.unescapeFormulaExpression = unescapeFormulaExpression;
 Handsontable.utils.FormulasUtils.toUpperCaseFormula = toUpperCaseFormula;
+Handsontable.utils.FormulasUtils.toLabel = toLabel;
+Handsontable.utils.FormulasUtils.extractLabel = extractLabel;
+Handsontable.utils.FormulasUtils.columnIndexToLabel = columnIndexToLabel;
 
 //# 
 },{"../../browser":138}],204:[function(_dereq_,module,exports){
