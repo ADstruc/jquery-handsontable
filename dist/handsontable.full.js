@@ -27928,6 +27928,7 @@ var $__handsontable_47_helpers_47_array__,
     $___46__46__47_expressionModifier__;
 var arrayEach = ($__handsontable_47_helpers_47_array__ = _dereq_("../../../../node_modules/hot-builder/node_modules/handsontable/src/helpers/array"), $__handsontable_47_helpers_47_array__ && $__handsontable_47_helpers_47_array__.__esModule && $__handsontable_47_helpers_47_array__ || {default: $__handsontable_47_helpers_47_array__}).arrayEach;
 var isFormulaExpression = ($___46__46__47_utils__ = _dereq_("utils"), $___46__46__47_utils__ && $___46__46__47_utils__.__esModule && $___46__46__47_utils__ || {default: $___46__46__47_utils__}).isFormulaExpression;
+var isFormulaEnabledOnColumn = ($___46__46__47_utils__ = _dereq_("utils"), $___46__46__47_utils__ && $___46__46__47_utils__.__esModule && $___46__46__47_utils__ || {default: $___46__46__47_utils__}).isFormulaEnabledOnColumn;
 var CellValue = ($___46__46__47_cell_47_value__ = _dereq_("cell/value"), $___46__46__47_cell_47_value__ && $___46__46__47_cell_47_value__.__esModule && $___46__46__47_cell_47_value__ || {default: $___46__46__47_cell_47_value__}).CellValue;
 var ExpressionModifier = ($___46__46__47_expressionModifier__ = _dereq_("expressionModifier"), $___46__46__47_expressionModifier__ && $___46__46__47_expressionModifier__.__esModule && $___46__46__47_expressionModifier__ || {default: $___46__46__47_expressionModifier__}).ExpressionModifier;
 var OPERATION_NAME = 'column_sorting';
@@ -27953,7 +27954,7 @@ function operate() {
         row = $__5.row,
         column = $__5.column;
     var value = dataProvider.getSourceDataAtCell(row, column);
-    if (isFormulaExpression(value)) {
+    if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__4.hot, column)) {
       var prevRow = visualRows.get(cell);
       var expModifier = new ExpressionModifier(value);
       expModifier.translate({row: dataProvider.t.toVisualRow(row) - prevRow});
@@ -27982,7 +27983,8 @@ var $__handsontable_47_helpers_47_array__,
 var arrayEach = ($__handsontable_47_helpers_47_array__ = _dereq_("../../../../node_modules/hot-builder/node_modules/handsontable/src/helpers/array"), $__handsontable_47_helpers_47_array__ && $__handsontable_47_helpers_47_array__.__esModule && $__handsontable_47_helpers_47_array__ || {default: $__handsontable_47_helpers_47_array__}).arrayEach;
 var $__1 = ($___46__46__47_utils__ = _dereq_("utils"), $___46__46__47_utils__ && $___46__46__47_utils__.__esModule && $___46__46__47_utils__ || {default: $___46__46__47_utils__}),
     cellCoordFactory = $__1.cellCoordFactory,
-    isFormulaExpression = $__1.isFormulaExpression;
+    isFormulaExpression = $__1.isFormulaExpression,
+    isFormulaEnabledOnColumn = $__1.isFormulaEnabledOnColumn;
 var CellValue = ($___46__46__47_cell_47_value__ = _dereq_("cell/value"), $___46__46__47_cell_47_value__ && $___46__46__47_cell_47_value__.__esModule && $___46__46__47_cell_47_value__ || {default: $___46__46__47_cell_47_value__}).CellValue;
 var ExpressionModifier = ($___46__46__47_expressionModifier__ = _dereq_("expressionModifier"), $___46__46__47_expressionModifier__ && $___46__46__47_expressionModifier__.__esModule && $___46__46__47_expressionModifier__ || {default: $___46__46__47_expressionModifier__}).ExpressionModifier;
 var OPERATION_NAME = 'insert_column';
@@ -28012,7 +28014,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value)) {
+      if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__4.hot, column)) {
         var startCoord = cellCoordFactory('column', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28061,7 +28063,8 @@ var $__handsontable_47_helpers_47_array__,
 var arrayEach = ($__handsontable_47_helpers_47_array__ = _dereq_("../../../../node_modules/hot-builder/node_modules/handsontable/src/helpers/array"), $__handsontable_47_helpers_47_array__ && $__handsontable_47_helpers_47_array__.__esModule && $__handsontable_47_helpers_47_array__ || {default: $__handsontable_47_helpers_47_array__}).arrayEach;
 var $__1 = ($___46__46__47_utils__ = _dereq_("utils"), $___46__46__47_utils__ && $___46__46__47_utils__.__esModule && $___46__46__47_utils__ || {default: $___46__46__47_utils__}),
     cellCoordFactory = $__1.cellCoordFactory,
-    isFormulaExpression = $__1.isFormulaExpression;
+    isFormulaExpression = $__1.isFormulaExpression,
+    isFormulaEnabledOnColumn = $__1.isFormulaEnabledOnColumn;
 var CellValue = ($___46__46__47_cell_47_value__ = _dereq_("cell/value"), $___46__46__47_cell_47_value__ && $___46__46__47_cell_47_value__.__esModule && $___46__46__47_cell_47_value__ || {default: $___46__46__47_cell_47_value__}).CellValue;
 var ExpressionModifier = ($___46__46__47_expressionModifier__ = _dereq_("expressionModifier"), $___46__46__47_expressionModifier__ && $___46__46__47_expressionModifier__.__esModule && $___46__46__47_expressionModifier__ || {default: $___46__46__47_expressionModifier__}).ExpressionModifier;
 var OPERATION_NAME = 'insert_row';
@@ -28091,7 +28094,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value)) {
+      if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__4.hot, column)) {
         var startCoord = cellCoordFactory('row', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28140,7 +28143,8 @@ var $__handsontable_47_helpers_47_array__,
 var arrayEach = ($__handsontable_47_helpers_47_array__ = _dereq_("../../../../node_modules/hot-builder/node_modules/handsontable/src/helpers/array"), $__handsontable_47_helpers_47_array__ && $__handsontable_47_helpers_47_array__.__esModule && $__handsontable_47_helpers_47_array__ || {default: $__handsontable_47_helpers_47_array__}).arrayEach;
 var $__1 = ($___46__46__47_utils__ = _dereq_("utils"), $___46__46__47_utils__ && $___46__46__47_utils__.__esModule && $___46__46__47_utils__ || {default: $___46__46__47_utils__}),
     cellCoordFactory = $__1.cellCoordFactory,
-    isFormulaExpression = $__1.isFormulaExpression;
+    isFormulaExpression = $__1.isFormulaExpression,
+    isFormulaEnabledOnColumn = $__1.isFormulaEnabledOnColumn;
 var CellValue = ($___46__46__47_cell_47_value__ = _dereq_("cell/value"), $___46__46__47_cell_47_value__ && $___46__46__47_cell_47_value__.__esModule && $___46__46__47_cell_47_value__ || {default: $___46__46__47_cell_47_value__}).CellValue;
 var ExpressionModifier = ($___46__46__47_expressionModifier__ = _dereq_("expressionModifier"), $___46__46__47_expressionModifier__ && $___46__46__47_expressionModifier__.__esModule && $___46__46__47_expressionModifier__ || {default: $___46__46__47_expressionModifier__}).ExpressionModifier;
 var OPERATION_NAME = 'remove_column';
@@ -28191,7 +28195,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value)) {
+      if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__4.hot, column)) {
         var startCoord = cellCoordFactory('column', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28259,7 +28263,8 @@ var $__handsontable_47_helpers_47_array__,
 var arrayEach = ($__handsontable_47_helpers_47_array__ = _dereq_("../../../../node_modules/hot-builder/node_modules/handsontable/src/helpers/array"), $__handsontable_47_helpers_47_array__ && $__handsontable_47_helpers_47_array__.__esModule && $__handsontable_47_helpers_47_array__ || {default: $__handsontable_47_helpers_47_array__}).arrayEach;
 var $__1 = ($___46__46__47_utils__ = _dereq_("utils"), $___46__46__47_utils__ && $___46__46__47_utils__.__esModule && $___46__46__47_utils__ || {default: $___46__46__47_utils__}),
     cellCoordFactory = $__1.cellCoordFactory,
-    isFormulaExpression = $__1.isFormulaExpression;
+    isFormulaExpression = $__1.isFormulaExpression,
+    isFormulaEnabledOnColumn = $__1.isFormulaEnabledOnColumn;
 var CellValue = ($___46__46__47_cell_47_value__ = _dereq_("cell/value"), $___46__46__47_cell_47_value__ && $___46__46__47_cell_47_value__.__esModule && $___46__46__47_cell_47_value__ || {default: $___46__46__47_cell_47_value__}).CellValue;
 var ExpressionModifier = ($___46__46__47_expressionModifier__ = _dereq_("expressionModifier"), $___46__46__47_expressionModifier__ && $___46__46__47_expressionModifier__.__esModule && $___46__46__47_expressionModifier__ || {default: $___46__46__47_expressionModifier__}).ExpressionModifier;
 var OPERATION_NAME = 'remove_row';
@@ -28310,7 +28315,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value)) {
+      if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__4.hot, column)) {
         var startCoord = cellCoordFactory('row', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28562,6 +28567,7 @@ var arrayEach = ($__handsontable_47_helpers_47_array__ = _dereq_("../../../node_
 var rangeEach = ($__handsontable_47_helpers_47_number__ = _dereq_("../../../node_modules/hot-builder/node_modules/handsontable/src/helpers/number"), $__handsontable_47_helpers_47_number__ && $__handsontable_47_helpers_47_number__.__esModule && $__handsontable_47_helpers_47_number__ || {default: $__handsontable_47_helpers_47_number__}).rangeEach;
 var getTranslator = ($__handsontable_47_utils_47_recordTranslator__ = _dereq_("../../../node_modules/hot-builder/node_modules/handsontable/src/utils/recordTranslator"), $__handsontable_47_utils_47_recordTranslator__ && $__handsontable_47_utils_47_recordTranslator__.__esModule && $__handsontable_47_utils_47_recordTranslator__ || {default: $__handsontable_47_utils_47_recordTranslator__}).getTranslator;
 var isFormulaExpression = ($__utils__ = _dereq_("utils"), $__utils__ && $__utils__.__esModule && $__utils__ || {default: $__utils__}).isFormulaExpression;
+var isFormulaEnabledOnColumn = ($__utils__ = _dereq_("utils"), $__utils__ && $__utils__.__esModule && $__utils__ || {default: $__utils__}).isFormulaEnabledOnColumn;
 var DataProvider = function DataProvider(hot) {
   this.hot = hot;
   this.changes = {};
@@ -28569,7 +28575,7 @@ var DataProvider = function DataProvider(hot) {
 };
 ($traceurRuntime.createClass)(DataProvider, {
   collectChanges: function(row, column, value) {
-    if (!isFormulaExpression(value)) {
+    if (!isFormulaExpression(value) || !isFormulaEnabledOnColumn(this.hot, column)) {
       this.changes[this._coordId(row, column)] = value;
     }
   },
@@ -28869,6 +28875,7 @@ var EventManager = ($__handsontable_47_eventManager__ = _dereq_("../../../node_m
 var registerPlugin = ($__handsontable_47_plugins__ = _dereq_("../../../node_modules/hot-builder/node_modules/handsontable/src/plugins"), $__handsontable_47_plugins__ && $__handsontable_47_plugins__.__esModule && $__handsontable_47_plugins__ || {default: $__handsontable_47_plugins__}).registerPlugin;
 var $__5 = ($__utils__ = _dereq_("utils"), $__utils__ && $__utils__.__esModule && $__utils__ || {default: $__utils__}),
     isFormulaExpression = $__5.isFormulaExpression,
+    isFormulaEnabledOnColumn = $__5.isFormulaEnabledOnColumn,
     toUpperCaseFormula = $__5.toUpperCaseFormula,
     isFormulaExpressionEscaped = $__5.isFormulaExpressionEscaped,
     unescapeFormulaExpression = $__5.unescapeFormulaExpression;
@@ -29060,7 +29067,7 @@ var $Formulas = Formulas;
   onModifyData: function(row, column, valueHolder, ioMode) {
     if (ioMode === 'get' && this.hasComputedCellValue(row, column)) {
       valueHolder.value = this.getCellValue(row, column);
-    } else if (ioMode === 'set' && isFormulaExpression(valueHolder.value)) {
+    } else if (ioMode === 'set' && isFormulaExpression(valueHolder.value) && isFormulaEnabledOnColumn(this.hot, column)) {
       valueHolder.value = toUpperCaseFormula(valueHolder.value);
     }
   },
@@ -29091,7 +29098,7 @@ var $Formulas = Formulas;
           newValue = $__28[3];
       column = $__9.hot.propToCol(column);
       row = $__9.t.toPhysicalRow(row);
-      if (isFormulaExpression(newValue)) {
+      if (isFormulaExpression(newValue) && isFormulaEnabledOnColumn($__9.hot, column)) {
         newValue = toUpperCaseFormula(newValue);
       }
       $__9.dataProvider.collectChanges(row, column, newValue);
@@ -29302,6 +29309,7 @@ var CellValue = ($__cell_47_value__ = _dereq_("cell/value"), $__cell_47_value__ 
 var CellReference = ($__cell_47_reference__ = _dereq_("cell/reference"), $__cell_47_reference__ && $__cell_47_reference__.__esModule && $__cell_47_reference__ || {default: $__cell_47_reference__}).CellReference;
 var $__4 = ($__utils__ = _dereq_("utils"), $__utils__ && $__utils__.__esModule && $__utils__ || {default: $__utils__}),
     isFormulaExpression = $__4.isFormulaExpression,
+    isFormulaEnabledOnColumn = $__4.isFormulaEnabledOnColumn,
     toUpperCaseFormula = $__4.toUpperCaseFormula;
 var Matrix = ($__matrix__ = _dereq_("matrix"), $__matrix__ && $__matrix__.__esModule && $__matrix__ || {default: $__matrix__}).Matrix;
 var AlterManager = ($__alterManager__ = _dereq_("alterManager"), $__alterManager__ && $__alterManager__.__esModule && $__alterManager__ || {default: $__alterManager__}).AlterManager;
@@ -29368,7 +29376,7 @@ var Sheet = function Sheet(hot, dataProvider) {
     var cells = this.matrix.getOutOfDateCells();
     arrayEach(cells, (function(cellValue) {
       var value = $__11.dataProvider.getSourceDataAtCell(cellValue.row, cellValue.column);
-      if (isFormulaExpression(value)) {
+      if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__11.hot, cellValue.column)) {
         $__11.parseExpression(cellValue, value.substr(1));
       }
     }));
@@ -29381,7 +29389,7 @@ var Sheet = function Sheet(hot, dataProvider) {
     this.matrix.reset();
     arrayEach(cells, (function(rowData, row) {
       arrayEach(rowData, (function(value, column) {
-        if (isFormulaExpression(value)) {
+        if (isFormulaExpression(value) && isFormulaEnabledOnColumn($__11.hot, column)) {
           $__11.parseExpression(new CellValue(row, column), value.substr(1));
         }
       }));
@@ -29401,7 +29409,7 @@ var Sheet = function Sheet(hot, dataProvider) {
       row: row,
       column: column
     });
-    if (isFormulaExpression(newValue)) {
+    if (isFormulaExpression(newValue) && isFormulaEnabledOnColumn(this.hot, column)) {
       this.parseExpression(new CellValue(row, column), newValue.substr(1));
     }
     var deps = ($__20 = this).getCellDependencies.apply($__20, $traceurRuntime.spread(this.t.toVisual(row, column)));
@@ -29571,6 +29579,9 @@ Object.defineProperties(exports, {
   isFormulaExpression: {get: function() {
       return isFormulaExpression;
     }},
+  isFormulaEnabledOnColumn: {get: function() {
+      return isFormulaEnabledOnColumn;
+    }},
   isFormulaExpressionEscaped: {get: function() {
       return isFormulaExpressionEscaped;
     }},
@@ -29594,12 +29605,29 @@ Object.defineProperties(exports, {
     }},
   __esModule: {value: true}
 });
-var $___46__46__47__46__46__47_browser__;
+var $___46__46__47__46__46__47_browser__,
+    $__hot_45_formula_45_parser__;
 var Handsontable = ($___46__46__47__46__46__47_browser__ = _dereq_("../../browser"), $___46__46__47__46__46__47_browser__ && $___46__46__47__46__46__47_browser__.__esModule && $___46__46__47__46__46__47_browser__ || {default: $___46__46__47__46__46__47_browser__}).default;
-var hotForumlaParser = _dereq_("hot-formula-parser");
+var hotForumlaParser = ($__hot_45_formula_45_parser__ = _dereq_("hot-formula-parser"), $__hot_45_formula_45_parser__ && $__hot_45_formula_45_parser__.__esModule && $__hot_45_formula_45_parser__ || {default: $__hot_45_formula_45_parser__});
 function isFormulaExpression(expression) {
   expression = (expression + '');
   return expression && expression.length >= 2 && expression.charAt(0) === '=' ? true : false;
+}
+function isFormulaEnabledOnColumn(hot, column) {
+  var settings;
+
+  if (!hot || !column) {
+    return true;
+  }
+  settings = hot.getSettings();
+  if (settings &&
+      settings.formulasEnabledByColumn &&
+      settings.columns instanceof Array &&
+      settings.columns.length > column &&
+      settings.columns[column]) {
+    return !!settings.columns[column].formulas;
+  }
+  return true;
 }
 function isFormulaExpressionEscaped(expression) {
   return expression && ((expression + '').charAt(0) === '\'' && ((expression + '').charAt(1) === '=')) ? true : false;
@@ -29635,6 +29663,7 @@ function columnIndexToLabel(column) {
 }
 Handsontable.utils.FormulasUtils = Handsontable.utils.FormulasUtils || {};
 Handsontable.utils.FormulasUtils.isFormulaExpression = isFormulaExpression;
+Handsontable.utils.FormulasUtils.isFormulaEnabledOnColumn = isFormulaEnabledOnColumn;
 Handsontable.utils.FormulasUtils.isFormulaExpressionEscaped = isFormulaExpressionEscaped;
 Handsontable.utils.FormulasUtils.unescapeFormulaExpression = unescapeFormulaExpression;
 Handsontable.utils.FormulasUtils.toUpperCaseFormula = toUpperCaseFormula;
