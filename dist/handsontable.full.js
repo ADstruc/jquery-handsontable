@@ -29395,6 +29395,8 @@ var Sheet = function Sheet(hot, dataProvider) {
     var $__11 = this;
     var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
+    this.parser.toReEvaluateCells = {};
+    var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(rowData, row) {
       arrayEach(rowData, (function(value, column) {
         if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnColumn(column)) {
@@ -29402,6 +29404,43 @@ var Sheet = function Sheet(hot, dataProvider) {
         }
       }));
     }));
+
+    objectEach(this.parser.toReEvaluateCells, function(columns, row) {
+      objectEach(columns, function(reEval, column){
+        numberOfToReEvaluateCells++;
+      });
+    });
+
+    while (numberOfToReEvaluateCells && numberOfToReEvaluateCells !== numberOfReEvaluateCells) {
+      var reEvaluateCells = this.parser.toReEvaluateCells;
+      var numberOfReEvaluateCells = numberOfToReEvaluateCells;
+      this.parser.toReEvaluateCells = {};
+      numberOfToReEvaluateCells = 0;
+      objectEach(reEvaluateCells, function(columns, row) {
+        row = parseInt(row);
+        objectEach(columns, function(reEval, column){
+          column = parseInt(column);
+          var cell = $__11.matrix.getCellAt(row, column);
+          if (cell) {
+            $__11.matrix.remove(cell);
+          }
+        });
+      });
+      objectEach(reEvaluateCells, function(columns, row) {
+        row = parseInt(row);
+        objectEach(columns, function(reEval, column){
+          column = parseInt(column);
+          var value = cells[row][column];
+          $__11.parseExpression(new CellValue(row, column), value.substr(1));
+        });
+      });
+      objectEach(this.parser.toReEvaluateCells, function(columns, row) {
+        objectEach(columns, function(reEval, column){
+          numberOfToReEvaluateCells++;
+        });
+      });
+    }
+    delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
     this.runLocalHooks('afterRecalculate', cells, 'full');
   },
@@ -29429,9 +29468,11 @@ var Sheet = function Sheet(hot, dataProvider) {
   parseExpression: function(cellValue, formula) {
     cellValue.setState(CellValue.STATE_COMPUTING);
     this._processingCell = cellValue;
+    this.parser.processingCellPosition = {row: cellValue._row, column: cellValue._column};
     var $__16 = this.parser.parse(toUpperCaseFormula(formula)),
         error = $__16.error,
         result = $__16.result;
+    delete this.parser.processingCellPosition;
     cellValue.setValue(result);
     cellValue.setError(error);
     cellValue.setState(CellValue.STATE_UP_TO_DATE);
@@ -34702,6 +34743,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.emit('callCellValue', { label: label, row: row, column: column }, function (_value) {
 	        value = _value;
 	      });
+
+        if (this.toReEvaluateCells &&
+            ((this.toReEvaluateCells[row.index] && this.toReEvaluateCells[row.index][column.index]) ||
+            (typeof value === 'string' && value.slice(0, 1) === '='))) {
+          if (!this.toReEvaluateCells[this.processingCellPosition.row]) {
+            this.toReEvaluateCells[this.processingCellPosition.row] = {};
+          }
+          this.toReEvaluateCells[this.processingCellPosition.row][this.processingCellPosition.column] = true;
+        }
 	
 	      return value;
 	    }
