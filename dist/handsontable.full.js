@@ -29393,7 +29393,13 @@ var Sheet = function Sheet(hot, dataProvider) {
   },
   recalculateFull: function() {
     var $__11 = this;
-    var cells = this.dataProvider.getSourceDataByRange();
+    var data = this.hot.getData();
+    var cells;
+    if (Array.isArray(data) && data.length) {
+      cells = this.dataProvider.getSourceDataByRange();
+    } else {
+      cells = [];
+    }
     this.matrix.reset();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
