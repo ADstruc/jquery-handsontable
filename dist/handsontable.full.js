@@ -7137,12 +7137,17 @@ var DataSource = function DataSource(hotInstance) {
   getData: function() {
     var toArray = arguments[0] !== (void 0) ? arguments[0] : false;
     var result = this.data;
+    var rowCount;
     if (toArray) {
+      rowCount = this.countRows();
+      if (rowCount <= 0) {
+        return [];
+      }
       result = this.getByRange({
         row: 0,
         col: 0
       }, {
-        row: Math.max(this.countRows() - 1, 0),
+        row: Math.max(rowCount - 1, 0),
         col: Math.max(this.countColumns() - 1, 0)
       }, true);
     }
@@ -29393,13 +29398,7 @@ var Sheet = function Sheet(hot, dataProvider) {
   },
   recalculateFull: function() {
     var $__11 = this;
-    var data = this.hot.getData();
-    var cells;
-    if (Array.isArray(data) && data.length) {
-      cells = this.dataProvider.getSourceDataByRange();
-    } else {
-      cells = [];
-    }
+    var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
