@@ -17666,7 +17666,7 @@ var $ManualColumnMove = ManualColumnMove;
     var selection = this.hot.getSelectedRange();
     var priv = privatePool.get(this);
     var isSortingElement = event.realTarget.className.indexOf('columnSorting') > -1;
-    if (!selection || !isHeaderSelection || priv.pressed || event.button !== 0 || isSortingElement) {
+    if (!selection || !isHeaderSelection || priv.pressed || event.button !== 0 || isSortingElement || selection.from.col !== selection.to.col || !this.hot.getSettings().columns[selection.from.col] || !this.hot.getSettings().columns[selection.from.col].manualColumnMove) {
       priv.pressed = false;
       priv.columnsToMove.length = 0;
       removeClass(this.hot.rootElement, [CSS_ON_MOVING, CSS_SHOW_UI]);
