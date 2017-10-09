@@ -5807,6 +5807,14 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   this.getCoords = function(elem) {
     return this.view.wt.wtTable.getCoords.call(this.view.wt.wtTable, elem);
   };
+  this.isFormulaEnabledOnCell = function(row, column) {
+    if (this.isFormulaEnabledOnColumn(column)) { //and cell formulas setting is not set to false
+      return true;
+    }
+
+    // return cell formulas setting
+    return false;
+  }
   this.isFormulaEnabledOnColumn = function(column) {
     var settings;
 
@@ -29387,12 +29395,75 @@ var Sheet = function Sheet(hot, dataProvider) {
   recalculateOptimized: function() {
     var $__11 = this;
     var cells = this.matrix.getOutOfDateCells();
+console.log(cells, 'this.matrix', this.matrix);
+debugger;
+    arrayEach(cells, function(cellValue) {
+      if (!$__11.hot.isFormulaEnabledOnCell(cellValue.row, cellValue.column)) {
+        return;
+      }
+      var possibleFormula = $__11.hot.getSourceDataAtCell(cellValue.row, cellValue.column);
+debugger;
+      if (isFormulaExpression(possibleFormula)) {
+        cellValue.setValue(possibleFormula);
+      }
+    });
+    this.parser.settings = $__11.settings;
+    this.parser.toReEvaluateCells = {};
+    var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(cellValue) {
       var value = $__11.dataProvider.getSourceDataAtCell(cellValue.row, cellValue.column);
-      if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnColumn(cellValue.column)) {
+      if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnCell(cellValue.row, cellValue.column)) {
         $__11.parseExpression(cellValue, value.substr(1));
       }
     }));
+window.kenny = this.parser.toReEvaluateCells;
+console.log('recalculateOptimized', this.parser.toReEvaluateCells);
+    objectEach(this.parser.toReEvaluateCells, function(columns, row) {
+      objectEach(columns, function(reEval, column){
+        numberOfToReEvaluateCells++;
+      });
+    });
+    while (numberOfToReEvaluateCells && numberOfToReEvaluateCells !== numberOfReEvaluateCells) {
+      var reEvaluateCells = this.parser.toReEvaluateCells;
+      var numberOfReEvaluateCells = numberOfToReEvaluateCells;
+      this.parser.toReEvaluateCells = {};
+      numberOfToReEvaluateCells = 0;
+      objectEach(reEvaluateCells, function(columns, row) {
+        row = parseInt(row);
+        objectEach(columns, function(reEval, column){
+          column = parseInt(column);
+          var cell = $__11.matrix.getCellAt(row, column);
+          if (cell) {
+            // $__11.matrix.remove(cell);
+          }
+        });
+      });
+      objectEach(reEvaluateCells, function(columns, row) {
+        row = parseInt(row);
+        objectEach(columns, function(reEval, column){
+          var hadValue = false;
+          column = parseInt(column);
+          var value = $__11.dataProvider.getSourceDataAtCell(row, column);
+          // if ($__11.matrix.getCellAt(row, column)) {
+          //   console.log("\nHasOldValue: " + $__11.matrix.getCellAt(row, column).getValue());
+          //   hadValue = true;
+          // }
+          $__11.parseExpression($__11.matrix.getCellAt(row, column), value.substr(1));
+          // if (hadValue) {
+          //   console.log("NewValue: " + $__11.matrix.getCellAt(row, column).getValue());
+          // }
+        });
+      });
+debugger;
+      objectEach(this.parser.toReEvaluateCells, function(columns, row) {
+        objectEach(columns, function(reEval, column){
+          numberOfToReEvaluateCells++;
+        });
+      });
+    }
+
+
+    delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
     this.runLocalHooks('afterRecalculate', cells, 'optimized');
   },
@@ -29400,6 +29471,7 @@ var Sheet = function Sheet(hot, dataProvider) {
     var $__11 = this;
     var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
+    this.parser.settings = $__11.settings;
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(rowData, row) {
@@ -29409,7 +29481,8 @@ var Sheet = function Sheet(hot, dataProvider) {
         }
       }));
     }));
-
+window.drew = this.parser.toReEvaluateCells;
+console.log('recalculateFull', this.parser.toReEvaluateCells);
     objectEach(this.parser.toReEvaluateCells, function(columns, row) {
       objectEach(columns, function(reEval, column){
         numberOfToReEvaluateCells++;
@@ -29479,6 +29552,10 @@ var Sheet = function Sheet(hot, dataProvider) {
         result = $__16.result;
     delete this.parser.processingCellPosition;
     cellValue.setValue(result);
+// console.log('settingValue: '+result);
+if (cellValue._row == 0) {
+  console.log(cellValue._row, cellValue._column, '='+formula, result);
+}
     cellValue.setError(error);
     cellValue.setState(CellValue.STATE_UP_TO_DATE);
     this.matrix.add(cellValue);
@@ -34745,17 +34822,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	      var value = void 0;
 	
-	      this.emit('callCellValue', { label: label, row: row, column: column }, function (_value) {
-	        value = _value;
-	      });
+debugger;
+        this.emit('callCellValue', { label: label, row: row, column: column }, function (_value) {
+          value = _value;
+        });
 
         if (this.toReEvaluateCells &&
-            ((this.toReEvaluateCells[row.index] && this.toReEvaluateCells[row.index][column.index]) ||
-            (typeof value === 'string' && value.slice(0, 1) === '='))) {
+            (
+              (this.toReEvaluateCells[row.index] && this.toReEvaluateCells[row.index][column.index])  ||
+              (typeof value === 'string' && value.slice(0, 1) === '=')                                ||
+              (typeof value === 'string' && value === '#VALUE!')
+            )
+        ) {
           if (!this.toReEvaluateCells[this.processingCellPosition.row]) {
             this.toReEvaluateCells[this.processingCellPosition.row] = {};
           }
           this.toReEvaluateCells[this.processingCellPosition.row][this.processingCellPosition.column] = true;
+        }
+
+debugger;
+        if (this.toReEvaluateCells && this.settings.summaryRowIndex) {
+          this.toReEvaluateCells[this.settings.summaryRowIndex] = this.toReEvaluateCells[this.settings.summaryRowIndex] ? this.toReEvaluateCells[this.settings.summaryRowIndex] : {};
+          this.settings.summaryColumnIndexes.forEach(function(column) {
+            this.toReEvaluateCells[this.settings.summaryRowIndex][column] = true;
+          })
         }
 	
 	      return value;
