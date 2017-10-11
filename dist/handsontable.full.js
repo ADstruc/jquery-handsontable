@@ -5758,6 +5758,13 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       instance.view.wt.wtOverlays.updateMainScrollableElements();
     }
   };
+  this.recalculateSummaryRows = function() {
+debugger;
+    handsontableSheet.hot.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
+      var value = handsontableSheet.hot.getSourceDataAtCell(handsontableSheet.hot.getSettings().summaryRowIndex, columnIndex);
+      handsontableSheet.applyChanges(handsontableSheet.hot.getSettings().summaryRowIndex, columnIndex, value);
+    });
+  };
   this.getValue = function() {
     var sel = instance.getSelected();
     if (GridSettings.prototype.getValue) {
@@ -5808,19 +5815,31 @@ Handsontable.Core = function Core(rootElement, userSettings) {
     return this.view.wt.wtTable.getCoords.call(this.view.wt.wtTable, elem);
   };
   this.isFormulaEnabledOnCell = function(row, column) {
-    if (this.isFormulaEnabledOnColumn(column)) { //and cell formulas setting is not set to false
+    var settings = this.getSettings();
+
+    if (row === null || row === undefined || column == null || column == undefined) {
+      return false;
+    }
+
+    if (settings && settings.formulasEnabledByCell) {
+      if (row == settings.summaryRowIndex && -1 !== settings.summaryColumnIndexes.indexOf(column)) {
+        return true;
+      }
+    }
+
+    if (this.isFormulaEnabledOnColumn(column)) {
       return true;
     }
 
-    // return cell formulas setting
     return false;
   }
   this.isFormulaEnabledOnColumn = function(column) {
     var settings;
 
-    if (!column) {
+    if (column == null || column == undefined) {
       return true;
     }
+
     settings = this.getSettings();
     if (settings &&
         settings.formulasEnabledByColumn &&
@@ -27982,7 +28001,7 @@ function operate() {
         row = $__5.row,
         column = $__5.column;
     var value = dataProvider.getSourceDataAtCell(row, column);
-    if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+    if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
       var prevRow = visualRows.get(cell);
       var expModifier = new ExpressionModifier(value);
       expModifier.translate({row: dataProvider.t.toVisualRow(row) - prevRow});
@@ -28041,7 +28060,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('column', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28120,7 +28139,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('row', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28220,7 +28239,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('column', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28339,7 +28358,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('row', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28598,7 +28617,7 @@ var DataProvider = function DataProvider(hot) {
 };
 ($traceurRuntime.createClass)(DataProvider, {
   collectChanges: function(row, column, value) {
-    if (!isFormulaExpression(value) || !this.hot.isFormulaEnabledOnColumn(column)) {
+    if (!isFormulaExpression(value) || !this.hot.isFormulaEnabledOnCell(row, column)) {
       this.changes[this._coordId(row, column)] = value;
     }
   },
@@ -28909,6 +28928,7 @@ var Formulas = function Formulas(hotInstance) {
   this.eventManager = new EventManager(this);
   this.dataProvider = new DataProvider(this.hot);
   this.sheet = new Sheet(this.hot, this.dataProvider);
+window.handsontableSheet = this.sheet;
   this.undoRedoSnapshot = new UndoRedoSnapshot(this.sheet);
   this._skipRendering = false;
 };
@@ -29089,7 +29109,7 @@ var $Formulas = Formulas;
   onModifyData: function(row, column, valueHolder, ioMode) {
     if (ioMode === 'get' && this.hasComputedCellValue(row, column)) {
       valueHolder.value = this.getCellValue(row, column);
-    } else if (ioMode === 'set' && isFormulaExpression(valueHolder.value) && this.hot.isFormulaEnabledOnColumn(column)) {
+    } else if (ioMode === 'set' && isFormulaExpression(valueHolder.value) && this.hot.isFormulaEnabledOnCell(row, column)) {
       valueHolder.value = toUpperCaseFormula(valueHolder.value);
     }
   },
@@ -29120,7 +29140,7 @@ var $Formulas = Formulas;
           newValue = $__28[3];
       column = $__9.hot.propToCol(column);
       row = $__9.t.toPhysicalRow(row);
-      if (isFormulaExpression(newValue) && $__9.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(newValue) && $__9.hot.isFormulaEnabledOnCell(row, column)) {
         newValue = toUpperCaseFormula(newValue);
       }
       $__9.dataProvider.collectChanges(row, column, newValue);
@@ -29396,18 +29416,16 @@ var Sheet = function Sheet(hot, dataProvider) {
     var $__11 = this;
     var cells = this.matrix.getOutOfDateCells();
 console.log(cells, 'this.matrix', this.matrix);
-debugger;
     arrayEach(cells, function(cellValue) {
       if (!$__11.hot.isFormulaEnabledOnCell(cellValue.row, cellValue.column)) {
         return;
       }
       var possibleFormula = $__11.hot.getSourceDataAtCell(cellValue.row, cellValue.column);
-debugger;
       if (isFormulaExpression(possibleFormula)) {
         cellValue.setValue(possibleFormula);
       }
     });
-    this.parser.settings = $__11.settings;
+    this.parser.settings = $__11.hot.getSettings();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(cellValue) {
@@ -29416,7 +29434,6 @@ debugger;
         $__11.parseExpression(cellValue, value.substr(1));
       }
     }));
-window.kenny = this.parser.toReEvaluateCells;
 console.log('recalculateOptimized', this.parser.toReEvaluateCells);
     objectEach(this.parser.toReEvaluateCells, function(columns, row) {
       objectEach(columns, function(reEval, column){
@@ -29454,7 +29471,6 @@ console.log('recalculateOptimized', this.parser.toReEvaluateCells);
           // }
         });
       });
-debugger;
       objectEach(this.parser.toReEvaluateCells, function(columns, row) {
         objectEach(columns, function(reEval, column){
           numberOfToReEvaluateCells++;
@@ -29468,20 +29484,20 @@ debugger;
     this.runLocalHooks('afterRecalculate', cells, 'optimized');
   },
   recalculateFull: function() {
+debugger;
     var $__11 = this;
     var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
-    this.parser.settings = $__11.settings;
+    this.parser.settings = $__11.hot.getSettings();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(rowData, row) {
       arrayEach(rowData, (function(value, column) {
-        if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnColumn(column)) {
+        if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnCell(row, column)) {
           $__11.parseExpression(new CellValue(row, column), value.substr(1));
         }
       }));
     }));
-window.drew = this.parser.toReEvaluateCells;
 console.log('recalculateFull', this.parser.toReEvaluateCells);
     objectEach(this.parser.toReEvaluateCells, function(columns, row) {
       objectEach(columns, function(reEval, column){
@@ -29534,7 +29550,7 @@ console.log('recalculateFull', this.parser.toReEvaluateCells);
       row: row,
       column: column
     });
-    if (isFormulaExpression(newValue) && this.hot.isFormulaEnabledOnColumn(column)) {
+    if (isFormulaExpression(newValue) && this.hot.isFormulaEnabledOnCell(row, column)) {
       this.parseExpression(new CellValue(row, column), newValue.substr(1));
     }
     var deps = ($__20 = this).getCellDependencies.apply($__20, $traceurRuntime.spread(this.t.toVisual(row, column)));
@@ -29552,10 +29568,6 @@ console.log('recalculateFull', this.parser.toReEvaluateCells);
         result = $__16.result;
     delete this.parser.processingCellPosition;
     cellValue.setValue(result);
-// console.log('settingValue: '+result);
-if (cellValue._row == 0) {
-  console.log(cellValue._row, cellValue._column, '='+formula, result);
-}
     cellValue.setError(error);
     cellValue.setState(CellValue.STATE_UP_TO_DATE);
     this.matrix.add(cellValue);
@@ -34798,6 +34810,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_callCellValue',
 	    value: function _callCellValue(label) {
+        var self = this;
 
         if (label.slice(0, 2) === '<<' && label.slice(-2) === '>>') {
           this.emit('callPropToColAndRow', label.slice(2, label.length - 2), function (cellPosition) {
@@ -34822,7 +34835,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	      var value = void 0;
 	
-debugger;
         this.emit('callCellValue', { label: label, row: row, column: column }, function (_value) {
           value = _value;
         });
@@ -34839,13 +34851,12 @@ debugger;
           }
           this.toReEvaluateCells[this.processingCellPosition.row][this.processingCellPosition.column] = true;
         }
-
-debugger;
         if (this.toReEvaluateCells && this.settings.summaryRowIndex) {
           this.toReEvaluateCells[this.settings.summaryRowIndex] = this.toReEvaluateCells[this.settings.summaryRowIndex] ? this.toReEvaluateCells[this.settings.summaryRowIndex] : {};
-          this.settings.summaryColumnIndexes.forEach(function(column) {
-            this.toReEvaluateCells[this.settings.summaryRowIndex][column] = true;
-          })
+          this.settings.summaryColumnIndexes.forEach(function(columnIndex) {
+            self.toReEvaluateCells[self.settings.summaryRowIndex][columnIndex] = true;
+          });
+
         }
 	
 	      return value;
