@@ -5759,10 +5759,9 @@ Handsontable.Core = function Core(rootElement, userSettings) {
     }
   };
   this.recalculateSummaryRows = function() {
-debugger;
     handsontableSheet.hot.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
-      var value = handsontableSheet.hot.getSourceDataAtCell(handsontableSheet.hot.getSettings().summaryRowIndex, columnIndex);
-      handsontableSheet.applyChanges(handsontableSheet.hot.getSettings().summaryRowIndex, columnIndex, value);
+      var value = handsontableSheet.hot.getSourceDataAtCell(handsontableSheet.hot.getSummaryRowIndex(), columnIndex);
+      handsontableSheet.applyChanges(handsontableSheet.hot.getSummaryRowIndex(), columnIndex, value);
     });
   };
   this.getValue = function() {
@@ -5801,6 +5800,12 @@ debugger;
   this.getSettings = function() {
     return priv.settings;
   };
+  this.getSummaryRowIndex = function() {
+    if (null === this.getSettings().summaryRowReversedIndex) {
+      return null;
+    }
+    return this.countRows() - this.getSettings().summaryRowReversedIndex - 1;
+  };
   this.clear = function() {
     selection.selectAll();
     selection.empty();
@@ -5822,7 +5827,10 @@ debugger;
     }
 
     if (settings && settings.formulasEnabledByCell) {
-      if (row == settings.summaryRowIndex && -1 !== settings.summaryColumnIndexes.indexOf(column)) {
+      if (
+          (row == (this.countRows() - 1)) &&
+          (settings.summaryColumnIndexes && -1 !== settings.summaryColumnIndexes.indexOf(column))
+      ) {
         return true;
       }
     }
@@ -6834,6 +6842,7 @@ DataMap.prototype.removeRow = function(index, amount, source) {
     Array.prototype.push.apply(data, newData);
   }
   Handsontable.hooks.run(this.instance, 'afterRemoveRow', index, amount, logicRows, source);
+debugger;
   this.instance.forceFullRender = true;
 };
 DataMap.prototype.removeCol = function(index, amount, source) {
@@ -29425,6 +29434,7 @@ console.log(cells, 'this.matrix', this.matrix);
         cellValue.setValue(possibleFormula);
       }
     });
+    this.parser.hot = $__11.hot;
     this.parser.settings = $__11.hot.getSettings();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
@@ -29484,10 +29494,10 @@ console.log('recalculateOptimized', this.parser.toReEvaluateCells);
     this.runLocalHooks('afterRecalculate', cells, 'optimized');
   },
   recalculateFull: function() {
-debugger;
     var $__11 = this;
     var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
+    this.parser.hot = $__11.hot;
     this.parser.settings = $__11.hot.getSettings();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
@@ -29562,6 +29572,7 @@ console.log('recalculateFull', this.parser.toReEvaluateCells);
   parseExpression: function(cellValue, formula) {
     cellValue.setState(CellValue.STATE_COMPUTING);
     this._processingCell = cellValue;
+
     this.parser.processingCellPosition = {row: cellValue._row, column: cellValue._column};
     var $__16 = this.parser.parse(toUpperCaseFormula(formula)),
         error = $__16.error,
@@ -34851,10 +34862,10 @@ return /******/ (function(modules) { // webpackBootstrap
           }
           this.toReEvaluateCells[this.processingCellPosition.row][this.processingCellPosition.column] = true;
         }
-        if (this.toReEvaluateCells && this.settings.summaryRowIndex) {
-          this.toReEvaluateCells[this.settings.summaryRowIndex] = this.toReEvaluateCells[this.settings.summaryRowIndex] ? this.toReEvaluateCells[this.settings.summaryRowIndex] : {};
+        if (this.toReEvaluateCells && this.hot.getSummaryRowIndex()) {
+          this.toReEvaluateCells[this.hot.getSummaryRowIndex()] = this.toReEvaluateCells[this.hot.getSummaryRowIndex()] ? this.toReEvaluateCells[this.hot.getSummaryRowIndex()] : {};
           this.settings.summaryColumnIndexes.forEach(function(columnIndex) {
-            self.toReEvaluateCells[self.settings.summaryRowIndex][columnIndex] = true;
+            self.toReEvaluateCells[self.hot.getSummaryRowIndex()][columnIndex] = true;
           });
 
         }
