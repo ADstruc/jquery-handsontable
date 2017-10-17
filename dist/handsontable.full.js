@@ -5760,10 +5760,12 @@ Handsontable.Core = function Core(rootElement, userSettings) {
     }
   };
   this.recalculateSummaryRows = function() {
-    this.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
-      var value = instance.getSourceDataAtCell(instance.getSummaryRowIndex(), columnIndex);
-      instance.getPlugin('Formulas').sheet.applyChanges(instance.getSummaryRowIndex(), columnIndex, value);
-    });
+    if (instance.getSummaryRowIndex()) {
+      this.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
+        var value = instance.getSourceDataAtCell(instance.getSummaryRowIndex(), columnIndex);
+        instance.getPlugin('Formulas').sheet.applyChanges(instance.getSummaryRowIndex(), columnIndex, value);
+      });
+    }
   };
   this.getValue = function() {
     var sel = instance.getSelected();
