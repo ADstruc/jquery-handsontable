@@ -4766,6 +4766,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
           }
           break;
         case 'remove_row':
+// debugger;
           datamap.removeRow(index, amount, source);
           priv.cellSettings.splice(index, amount);
           var totalRows = instance.countRows();
@@ -5137,6 +5138,7 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       selection.refreshBorders(null, keepEditorOpened);
     },
     refreshBorders: function(revertOriginal, keepEditor) {
+// debugger;
       if (!keepEditor) {
         editorManager.destroyEditor(revertOriginal);
       }
@@ -5759,9 +5761,9 @@ Handsontable.Core = function Core(rootElement, userSettings) {
     }
   };
   this.recalculateSummaryRows = function() {
-    handsontableSheet.hot.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
-      var value = handsontableSheet.hot.getSourceDataAtCell(handsontableSheet.hot.getSummaryRowIndex(), columnIndex);
-      handsontableSheet.applyChanges(handsontableSheet.hot.getSummaryRowIndex(), columnIndex, value);
+    this.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
+      var value = instance.getSourceDataAtCell(instance.getSummaryRowIndex(), columnIndex);
+      instance.getPlugin('Formulas').sheet.applyChanges(instance.getSummaryRowIndex(), columnIndex, value);
     });
   };
   this.getValue = function() {
@@ -6842,7 +6844,7 @@ DataMap.prototype.removeRow = function(index, amount, source) {
     Array.prototype.push.apply(data, newData);
   }
   Handsontable.hooks.run(this.instance, 'afterRemoveRow', index, amount, logicRows, source);
-debugger;
+// debugger;
   this.instance.forceFullRender = true;
 };
 DataMap.prototype.removeCol = function(index, amount, source) {
@@ -7268,6 +7270,7 @@ var DataSource = function DataSource(hotInstance) {
     return result;
   },
   destroy: function() {
+// debugger;
     this.data = null;
     this.hot = null;
   }
@@ -27920,6 +27923,8 @@ registerOperation(removeColumn.OPERATION_NAME, removeColumn);
 registerOperation(removeRow.OPERATION_NAME, removeRow);
 var AlterManager = function AlterManager(sheet) {
   this.sheet = sheet;
+console.log('alterManager');
+// debugger;
   this.hot = sheet.hot;
   this.dataProvider = sheet.dataProvider;
   this.matrix = sheet.matrix;
@@ -28208,6 +28213,8 @@ function operate(start, amount) {
       matrix = $__4.matrix,
       dataProvider = $__4.dataProvider,
       sheet = $__4.sheet;
+console.log('operate');
+// debugger;
   var translate = [0, amount];
   var indexOffset = Math.abs(amount) - 1;
   var removedCellRef = matrix.removeCellRefsAtRange({column: start}, {column: start + indexOffset});
@@ -28327,6 +28334,8 @@ function operate(start, amount) {
       matrix = $__4.matrix,
       dataProvider = $__4.dataProvider,
       sheet = $__4.sheet;
+console.log('operate');
+// debugger;
   var translate = [amount, 0];
   var indexOffset = Math.abs(amount) - 1;
   var removedCellRef = matrix.removeCellRefsAtRange({row: start}, {row: start + indexOffset});
@@ -28937,7 +28946,6 @@ var Formulas = function Formulas(hotInstance) {
   this.eventManager = new EventManager(this);
   this.dataProvider = new DataProvider(this.hot);
   this.sheet = new Sheet(this.hot, this.dataProvider);
-window.handsontableSheet = this.sheet;
   this.undoRedoSnapshot = new UndoRedoSnapshot(this.sheet);
   this._skipRendering = false;
 };
@@ -29632,6 +29640,7 @@ console.log('recalculateFull', this.parser.toReEvaluateCells);
     this.recalculateOptimized();
   },
   destroy: function() {
+// debugger;
     this.hot = null;
     this.t = null;
     this.dataProvider.destroy();
