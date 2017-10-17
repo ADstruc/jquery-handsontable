@@ -5138,7 +5138,6 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       selection.refreshBorders(null, keepEditorOpened);
     },
     refreshBorders: function(revertOriginal, keepEditor) {
-// debugger;
       if (!keepEditor) {
         editorManager.destroyEditor(revertOriginal);
       }
