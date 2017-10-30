@@ -4766,7 +4766,6 @@ Handsontable.Core = function Core(rootElement, userSettings) {
           }
           break;
         case 'remove_row':
-// debugger;
           datamap.removeRow(index, amount, source);
           priv.cellSettings.splice(index, amount);
           var totalRows = instance.countRows();
@@ -6845,7 +6844,6 @@ DataMap.prototype.removeRow = function(index, amount, source) {
     Array.prototype.push.apply(data, newData);
   }
   Handsontable.hooks.run(this.instance, 'afterRemoveRow', index, amount, logicRows, source);
-// debugger;
   this.instance.forceFullRender = true;
 };
 DataMap.prototype.removeCol = function(index, amount, source) {
@@ -7271,7 +7269,6 @@ var DataSource = function DataSource(hotInstance) {
     return result;
   },
   destroy: function() {
-// debugger;
     this.data = null;
     this.hot = null;
   }
@@ -27924,8 +27921,6 @@ registerOperation(removeColumn.OPERATION_NAME, removeColumn);
 registerOperation(removeRow.OPERATION_NAME, removeRow);
 var AlterManager = function AlterManager(sheet) {
   this.sheet = sheet;
-console.log('alterManager');
-// debugger;
   this.hot = sheet.hot;
   this.dataProvider = sheet.dataProvider;
   this.matrix = sheet.matrix;
@@ -28214,8 +28209,6 @@ function operate(start, amount) {
       matrix = $__4.matrix,
       dataProvider = $__4.dataProvider,
       sheet = $__4.sheet;
-console.log('operate');
-// debugger;
   var translate = [0, amount];
   var indexOffset = Math.abs(amount) - 1;
   var removedCellRef = matrix.removeCellRefsAtRange({column: start}, {column: start + indexOffset});
@@ -28335,8 +28328,6 @@ function operate(start, amount) {
       matrix = $__4.matrix,
       dataProvider = $__4.dataProvider,
       sheet = $__4.sheet;
-console.log('operate');
-// debugger;
   var translate = [amount, 0];
   var indexOffset = Math.abs(amount) - 1;
   var removedCellRef = matrix.removeCellRefsAtRange({row: start}, {row: start + indexOffset});
@@ -29433,7 +29424,6 @@ var Sheet = function Sheet(hot, dataProvider) {
   recalculateOptimized: function() {
     var $__11 = this;
     var cells = this.matrix.getOutOfDateCells();
-console.log(cells, 'this.matrix', this.matrix);
     arrayEach(cells, function(cellValue) {
       if (!$__11.hot.isFormulaEnabledOnCell(cellValue.row, cellValue.column)) {
         return;
@@ -29453,7 +29443,6 @@ console.log(cells, 'this.matrix', this.matrix);
         $__11.parseExpression(cellValue, value.substr(1));
       }
     }));
-console.log('recalculateOptimized', this.parser.toReEvaluateCells);
     objectEach(this.parser.toReEvaluateCells, function(columns, row) {
       objectEach(columns, function(reEval, column){
         numberOfToReEvaluateCells++;
@@ -29480,14 +29469,7 @@ console.log('recalculateOptimized', this.parser.toReEvaluateCells);
           var hadValue = false;
           column = parseInt(column);
           var value = $__11.dataProvider.getSourceDataAtCell(row, column);
-          // if ($__11.matrix.getCellAt(row, column)) {
-          //   console.log("\nHasOldValue: " + $__11.matrix.getCellAt(row, column).getValue());
-          //   hadValue = true;
-          // }
           $__11.parseExpression($__11.matrix.getCellAt(row, column), value.substr(1));
-          // if (hadValue) {
-          //   console.log("NewValue: " + $__11.matrix.getCellAt(row, column).getValue());
-          // }
         });
       });
       objectEach(this.parser.toReEvaluateCells, function(columns, row) {
@@ -29496,8 +29478,6 @@ console.log('recalculateOptimized', this.parser.toReEvaluateCells);
         });
       });
     }
-
-
     delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
     this.runLocalHooks('afterRecalculate', cells, 'optimized');
@@ -29517,13 +29497,11 @@ console.log('recalculateOptimized', this.parser.toReEvaluateCells);
         }
       }));
     }));
-console.log('recalculateFull', this.parser.toReEvaluateCells);
     objectEach(this.parser.toReEvaluateCells, function(columns, row) {
       objectEach(columns, function(reEval, column){
         numberOfToReEvaluateCells++;
       });
     });
-
     while (numberOfToReEvaluateCells && numberOfToReEvaluateCells !== numberOfReEvaluateCells) {
       var reEvaluateCells = this.parser.toReEvaluateCells;
       var numberOfReEvaluateCells = numberOfToReEvaluateCells;
@@ -29553,6 +29531,7 @@ console.log('recalculateFull', this.parser.toReEvaluateCells);
         });
       });
     }
+
     delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
     this.runLocalHooks('afterRecalculate', cells, 'full');
@@ -29641,7 +29620,6 @@ console.log('recalculateFull', this.parser.toReEvaluateCells);
     this.recalculateOptimized();
   },
   destroy: function() {
-// debugger;
     this.hot = null;
     this.t = null;
     this.dataProvider.destroy();
