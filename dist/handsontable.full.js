@@ -29458,9 +29458,6 @@ var Sheet = function Sheet(hot, dataProvider) {
         objectEach(columns, function(reEval, column){
           column = parseInt(column);
           var cell = $__11.matrix.getCellAt(row, column);
-          if (cell) {
-            // $__11.matrix.remove(cell);
-          }
         });
       });
       objectEach(reEvaluateCells, function(columns, row) {
