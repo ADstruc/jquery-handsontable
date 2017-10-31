@@ -5758,6 +5758,14 @@ Handsontable.Core = function Core(rootElement, userSettings) {
       instance.view.wt.wtOverlays.updateMainScrollableElements();
     }
   };
+  this.recalculateSummaryRows = function() {
+    if (instance.getSummaryRowIndex()) {
+      this.getSettings().summaryColumnIndexes.forEach(function(columnIndex) {
+        var value = instance.getSourceDataAtCell(instance.getSummaryRowIndex(), columnIndex);
+        instance.getPlugin('Formulas').sheet.applyChanges(instance.getSummaryRowIndex(), columnIndex, value);
+      });
+    }
+  };
   this.getValue = function() {
     var sel = instance.getSelected();
     if (GridSettings.prototype.getValue) {
@@ -5794,6 +5802,12 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   this.getSettings = function() {
     return priv.settings;
   };
+  this.getSummaryRowIndex = function() {
+    if (null === this.getSettings().summaryRowReversedIndex) {
+      return null;
+    }
+    return this.countRows() - this.getSettings().summaryRowReversedIndex - 1;
+  };
   this.clear = function() {
     selection.selectAll();
     selection.empty();
@@ -5807,12 +5821,35 @@ Handsontable.Core = function Core(rootElement, userSettings) {
   this.getCoords = function(elem) {
     return this.view.wt.wtTable.getCoords.call(this.view.wt.wtTable, elem);
   };
+  this.isFormulaEnabledOnCell = function(row, column) {
+    var settings = this.getSettings();
+
+    if (row === null || row === undefined || column == null || column == undefined) {
+      return false;
+    }
+
+    if (settings && settings.formulasEnabledByCell) {
+      if (
+          (row == (this.countRows() - 1)) &&
+          (settings.summaryColumnIndexes && -1 !== settings.summaryColumnIndexes.indexOf(column))
+      ) {
+        return true;
+      }
+    }
+
+    if (this.isFormulaEnabledOnColumn(column)) {
+      return true;
+    }
+
+    return false;
+  }
   this.isFormulaEnabledOnColumn = function(column) {
     var settings;
 
-    if (!column) {
+    if (column == null || column == undefined) {
       return true;
     }
+
     settings = this.getSettings();
     if (settings &&
         settings.formulasEnabledByColumn &&
@@ -27974,7 +28011,7 @@ function operate() {
         row = $__5.row,
         column = $__5.column;
     var value = dataProvider.getSourceDataAtCell(row, column);
-    if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+    if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
       var prevRow = visualRows.get(cell);
       var expModifier = new ExpressionModifier(value);
       expModifier.translate({row: dataProvider.t.toVisualRow(row) - prevRow});
@@ -28033,7 +28070,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('column', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28112,7 +28149,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('row', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28212,7 +28249,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('column', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28331,7 +28368,7 @@ function operate(start, amount) {
           row = $__6.row,
           column = $__6.column;
       var value = dataProvider.getSourceDataAtCell(row, column);
-      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(value) && $__4.hot.isFormulaEnabledOnCell(row, column)) {
         var startCoord = cellCoordFactory('row', start);
         var expModifier = new ExpressionModifier(value);
         expModifier.useCustomModifier(customTranslateModifier);
@@ -28590,7 +28627,7 @@ var DataProvider = function DataProvider(hot) {
 };
 ($traceurRuntime.createClass)(DataProvider, {
   collectChanges: function(row, column, value) {
-    if (!isFormulaExpression(value) || !this.hot.isFormulaEnabledOnColumn(column)) {
+    if (!isFormulaExpression(value) || !this.hot.isFormulaEnabledOnCell(row, column)) {
       this.changes[this._coordId(row, column)] = value;
     }
   },
@@ -29081,7 +29118,7 @@ var $Formulas = Formulas;
   onModifyData: function(row, column, valueHolder, ioMode) {
     if (ioMode === 'get' && this.hasComputedCellValue(row, column)) {
       valueHolder.value = this.getCellValue(row, column);
-    } else if (ioMode === 'set' && isFormulaExpression(valueHolder.value) && this.hot.isFormulaEnabledOnColumn(column)) {
+    } else if (ioMode === 'set' && isFormulaExpression(valueHolder.value) && this.hot.isFormulaEnabledOnCell(row, column)) {
       valueHolder.value = toUpperCaseFormula(valueHolder.value);
     }
   },
@@ -29112,7 +29149,7 @@ var $Formulas = Formulas;
           newValue = $__28[3];
       column = $__9.hot.propToCol(column);
       row = $__9.t.toPhysicalRow(row);
-      if (isFormulaExpression(newValue) && $__9.hot.isFormulaEnabledOnColumn(column)) {
+      if (isFormulaExpression(newValue) && $__9.hot.isFormulaEnabledOnCell(row, column)) {
         newValue = toUpperCaseFormula(newValue);
       }
       $__9.dataProvider.collectChanges(row, column, newValue);
@@ -29387,12 +29424,58 @@ var Sheet = function Sheet(hot, dataProvider) {
   recalculateOptimized: function() {
     var $__11 = this;
     var cells = this.matrix.getOutOfDateCells();
+    arrayEach(cells, function(cellValue) {
+      if (!$__11.hot.isFormulaEnabledOnCell(cellValue.row, cellValue.column)) {
+        return;
+      }
+      var possibleFormula = $__11.hot.getSourceDataAtCell(cellValue.row, cellValue.column);
+      if (isFormulaExpression(possibleFormula)) {
+        cellValue.setValue(possibleFormula);
+      }
+    });
+    this.parser.hot = $__11.hot;
+    this.parser.settings = $__11.hot.getSettings();
+    this.parser.toReEvaluateCells = {};
+    var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(cellValue) {
       var value = $__11.dataProvider.getSourceDataAtCell(cellValue.row, cellValue.column);
-      if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnColumn(cellValue.column)) {
+      if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnCell(cellValue.row, cellValue.column)) {
         $__11.parseExpression(cellValue, value.substr(1));
       }
     }));
+    objectEach(this.parser.toReEvaluateCells, function(columns, row) {
+      objectEach(columns, function(reEval, column){
+        numberOfToReEvaluateCells++;
+      });
+    });
+    while (numberOfToReEvaluateCells && numberOfToReEvaluateCells !== numberOfReEvaluateCells) {
+      var reEvaluateCells = this.parser.toReEvaluateCells;
+      var numberOfReEvaluateCells = numberOfToReEvaluateCells;
+      this.parser.toReEvaluateCells = {};
+      numberOfToReEvaluateCells = 0;
+      objectEach(reEvaluateCells, function(columns, row) {
+        row = parseInt(row);
+        objectEach(columns, function(reEval, column){
+          column = parseInt(column);
+          var cell = $__11.matrix.getCellAt(row, column);
+        });
+      });
+      objectEach(reEvaluateCells, function(columns, row) {
+        row = parseInt(row);
+        objectEach(columns, function(reEval, column){
+          var hadValue = false;
+          column = parseInt(column);
+          var value = $__11.dataProvider.getSourceDataAtCell(row, column);
+          $__11.parseExpression($__11.matrix.getCellAt(row, column), value.substr(1));
+        });
+      });
+      objectEach(this.parser.toReEvaluateCells, function(columns, row) {
+        objectEach(columns, function(reEval, column){
+          numberOfToReEvaluateCells++;
+        });
+      });
+    }
+    delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
     this.runLocalHooks('afterRecalculate', cells, 'optimized');
   },
@@ -29400,22 +29483,22 @@ var Sheet = function Sheet(hot, dataProvider) {
     var $__11 = this;
     var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
+    this.parser.hot = $__11.hot;
+    this.parser.settings = $__11.hot.getSettings();
     this.parser.toReEvaluateCells = {};
     var numberOfToReEvaluateCells = 0;
     arrayEach(cells, (function(rowData, row) {
       arrayEach(rowData, (function(value, column) {
-        if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnColumn(column)) {
+        if (isFormulaExpression(value) && $__11.hot.isFormulaEnabledOnCell(row, column)) {
           $__11.parseExpression(new CellValue(row, column), value.substr(1));
         }
       }));
     }));
-
     objectEach(this.parser.toReEvaluateCells, function(columns, row) {
       objectEach(columns, function(reEval, column){
         numberOfToReEvaluateCells++;
       });
     });
-
     while (numberOfToReEvaluateCells && numberOfToReEvaluateCells !== numberOfReEvaluateCells) {
       var reEvaluateCells = this.parser.toReEvaluateCells;
       var numberOfReEvaluateCells = numberOfToReEvaluateCells;
@@ -29445,6 +29528,7 @@ var Sheet = function Sheet(hot, dataProvider) {
         });
       });
     }
+
     delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
     this.runLocalHooks('afterRecalculate', cells, 'full');
@@ -29461,7 +29545,7 @@ var Sheet = function Sheet(hot, dataProvider) {
       row: row,
       column: column
     });
-    if (isFormulaExpression(newValue) && this.hot.isFormulaEnabledOnColumn(column)) {
+    if (isFormulaExpression(newValue) && this.hot.isFormulaEnabledOnCell(row, column)) {
       this.parseExpression(new CellValue(row, column), newValue.substr(1));
     }
     var deps = ($__20 = this).getCellDependencies.apply($__20, $traceurRuntime.spread(this.t.toVisual(row, column)));
@@ -29473,6 +29557,7 @@ var Sheet = function Sheet(hot, dataProvider) {
   parseExpression: function(cellValue, formula) {
     cellValue.setState(CellValue.STATE_COMPUTING);
     this._processingCell = cellValue;
+
     this.parser.processingCellPosition = {row: cellValue._row, column: cellValue._column};
     var $__16 = this.parser.parse(toUpperCaseFormula(formula)),
         error = $__16.error,
@@ -34721,6 +34806,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: '_callCellValue',
 	    value: function _callCellValue(label) {
+        var self = this;
 
         if (label.slice(0, 2) === '<<' && label.slice(-2) === '>>') {
           this.emit('callPropToColAndRow', label.slice(2, label.length - 2), function (cellPosition) {
@@ -34745,17 +34831,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	      var value = void 0;
 	
-	      this.emit('callCellValue', { label: label, row: row, column: column }, function (_value) {
-	        value = _value;
-	      });
+        this.emit('callCellValue', { label: label, row: row, column: column }, function (_value) {
+          value = _value;
+        });
 
         if (this.toReEvaluateCells &&
-            ((this.toReEvaluateCells[row.index] && this.toReEvaluateCells[row.index][column.index]) ||
-            (typeof value === 'string' && value.slice(0, 1) === '='))) {
+            (
+              (this.toReEvaluateCells[row.index] && this.toReEvaluateCells[row.index][column.index])  ||
+              (typeof value === 'string' && value.slice(0, 1) === '=')                                ||
+              (typeof value === 'string' && value === '#VALUE!')
+            )
+        ) {
           if (!this.toReEvaluateCells[this.processingCellPosition.row]) {
             this.toReEvaluateCells[this.processingCellPosition.row] = {};
           }
           this.toReEvaluateCells[this.processingCellPosition.row][this.processingCellPosition.column] = true;
+        }
+        if (this.toReEvaluateCells && this.hot.getSummaryRowIndex()) {
+          this.toReEvaluateCells[this.hot.getSummaryRowIndex()] = this.toReEvaluateCells[this.hot.getSummaryRowIndex()] ? this.toReEvaluateCells[this.hot.getSummaryRowIndex()] : {};
+          this.settings.summaryColumnIndexes.forEach(function(columnIndex) {
+            self.toReEvaluateCells[self.hot.getSummaryRowIndex()][columnIndex] = true;
+          });
+
         }
 	
 	      return value;
