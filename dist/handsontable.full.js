@@ -3153,7 +3153,8 @@ var WalkontableSettings = function WalkontableSettings(wotInstance, settings) {
     groups: false,
     rowHeaderWidth: null,
     columnHeaderHeight: null,
-    headerClassName: null
+    headerClassName: null,
+    noContainerWorkspaceHeight: Infinity
   };
   this.settings = {};
   for (var i in this.defaults) {
@@ -3774,7 +3775,11 @@ var WalkontableTableRenderer = function WalkontableTableRenderer(wtTable) {
     var visibleRowIndex = 0;
     var sourceRowIndex = this.rowFilter.renderedToSource(visibleRowIndex);
     var isWorkingOnClone = this.wtTable.isWorkingOnClone();
+    if (window.drewdrew) {
+      console.time("total");
+    }
     while (sourceRowIndex < totalRows && sourceRowIndex >= 0) {
+      console.log('sourceRowIndex');
       if (!performanceWarningAppeared && visibleRowIndex > 1000) {
         performanceWarningAppeared = true;
         console.warn('Performance tip: Handsontable rendered more than 1000 visible rows. Consider limiting the number ' + 'of rendered rows by specifying the table height and/or turning off the "renderAllRows" option.');
@@ -3782,12 +3787,36 @@ var WalkontableTableRenderer = function WalkontableTableRenderer(wtTable) {
       if (rowsToRender !== void 0 && visibleRowIndex === rowsToRender) {
         break;
       }
+      if (window.drewdrew) {
+        // console.time("1");
+        // console.time("iterate");
+      }
       TR = this.getOrCreateTrForRow(visibleRowIndex, TR);
+      if (window.drewdrew) {
+        // console.timeEnd("1");
+        // console.time("2");
+      }
       this.renderRowHeaders(sourceRowIndex, TR);
+      if (window.drewdrew) {
+        // console.timeEnd("2");
+        // console.time("3");
+      }
       this.adjustColumns(TR, columnsToRender + this.rowHeaderCount);
+      if (window.drewdrew) {
+        // console.timeEnd("3");
+        // console.time("4");
+      }
       lastTD = this.renderCells(sourceRowIndex, TR, columnsToRender);
+      if (window.drewdrew) {
+        // console.timeEnd("4");
+        // console.time("5");
+      }
       if (!isWorkingOnClone || this.wot.isOverlayName(WalkontableOverlay.CLONE_BOTTOM)) {
         this.resetOversizedRow(sourceRowIndex);
+      }
+      if (window.drewdrew) {
+        // console.timeEnd("5");
+        // console.time("6");
       }
       if (TR.firstChild) {
         var height = this.wot.wtTable.getRowHeight(sourceRowIndex);
@@ -3798,8 +3827,19 @@ var WalkontableTableRenderer = function WalkontableTableRenderer(wtTable) {
           TR.firstChild.style.height = '';
         }
       }
+      if (window.drewdrew) {
+        // console.timeEnd("6");
+        // console.time("7");
+      }
       visibleRowIndex++;
       sourceRowIndex = this.rowFilter.renderedToSource(visibleRowIndex);
+      if (window.drewdrew) {
+        // console.timeEnd("7");
+        // console.timeEnd("iterate");
+      }
+    }
+    if (window.drewdrew) {
+      // console.timeEnd("total");
     }
   },
   resetOversizedRow: function(sourceRow) {
@@ -4143,7 +4183,7 @@ var WalkontableViewport = function WalkontableViewport(wotInstance) {
       height = document.documentElement.clientHeight;
     } else {
       elemHeight = outerHeight(trimmingContainer);
-      height = (elemHeight > 0 && trimmingContainer.clientHeight > 0) ? trimmingContainer.clientHeight : Infinity;
+      height = (elemHeight > 0 && trimmingContainer.clientHeight > 0) ? trimmingContainer.clientHeight : this.wot.getSetting('noContainerWorkspaceHeight');
     }
     return height;
   },
@@ -12532,7 +12572,7 @@ var $AutoColumnSize = AutoColumnSize;
       };
     }
     rangeEach(colRange.from, colRange.to, (function(col) {
-      if (force || ($__11.widths[col] === void 0 && !$__11.hot._getColWidthFromSettings(col))) {
+      if (($__11.widths[col] === void 0 && !$__11.hot._getColWidthFromSettings(col))) {
         var samples = $__11.samplesGenerator.generateColumnSamples(col, rowRange);
         samples.forEach((function(sample, col) {
           return $__11.ghostTable.addColumn(col, sample);
@@ -22479,6 +22519,9 @@ function TableView(instance) {
       return that.settings.columnHeaderHeight || columnHeaderHeight;
     }
   };
+  if (typeof instance.getSettings().noContainerWorkspaceHeight != 'undefined') {
+    walkontableConfig.noContainerWorkspaceHeight = instance.getSettings().noContainerWorkspaceHeight;
+  }
   Handsontable.hooks.run(instance, 'beforeInitWalkontable', walkontableConfig);
   this.wt = new Walkontable(walkontableConfig);
   this.activeWt = this.wt;
@@ -29113,7 +29156,9 @@ var $Formulas = Formulas;
           column = $__28.column;
       hot.validateCell(hot.getDataAtCell(row, column), hot.getCellMeta(row, column), (function() {}));
     }));
-    hot.render();
+    if(!this.hot.getSettings().skipAfterOptimizedRecalculateRender || type !== 'optimized') {
+      hot.render();
+    }
   },
   onModifyData: function(row, column, valueHolder, ioMode) {
     if (ioMode === 'get' && this.hasComputedCellValue(row, column)) {
@@ -29422,6 +29467,7 @@ var Sheet = function Sheet(hot, dataProvider) {
     }
   },
   recalculateOptimized: function() {
+    console.log('recalculate optimized');
     var $__11 = this;
     var cells = this.matrix.getOutOfDateCells();
     arrayEach(cells, function(cellValue) {
@@ -29477,9 +29523,12 @@ var Sheet = function Sheet(hot, dataProvider) {
     }
     delete this.parser.toReEvaluateCells;
     this._state = STATE_UP_TO_DATE;
+    window.drewdrew = true;
     this.runLocalHooks('afterRecalculate', cells, 'optimized');
+    window.drewdrew = false;
   },
   recalculateFull: function() {
+    console.log('recalculate optimized');
     var $__11 = this;
     var cells = this.dataProvider.getSourceDataByRange();
     this.matrix.reset();
