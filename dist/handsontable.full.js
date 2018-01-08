@@ -22292,15 +22292,7 @@ function TableView(instance) {
       var cellProperties = that.instance.getCellMeta(row, col);
       var prop = that.instance.colToProp(col);
       var value = that.instance.getDataAtRowProp(row, prop);
-      if (that.settings.rowHeight) {
-        var DIV = document.createElement('div');
-        DIV.className = TD.className = 'fixedRowHeight';
-        DIV.style.height = TD.style.height = that.settings.rowHeight + 'px';
-        while(TD.childNodes.length) {
-          DIV.appendChild(TD.childNodes[0]);
-        }
-        TD.appendChild(DIV);
-      }
+      TD.innerHTML='';
       if (that.instance.hasHook('beforeValueRender')) {
         value = that.instance.runHooks('beforeValueRender', value);
       }
