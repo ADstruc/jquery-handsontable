@@ -17704,7 +17704,29 @@ var $ManualColumnMove = ManualColumnMove;
     var selection = this.hot.getSelectedRange();
     var priv = privatePool.get(this);
     var isSortingElement = event.realTarget.className.indexOf('columnSorting') > -1;
-    if (!selection || !isHeaderSelection || priv.pressed || event.button !== 0 || isSortingElement) {
+    var notMovingColumn = (!selection || !isHeaderSelection || priv.pressed || event.button !== 0 || isSortingElement);
+    var columnHeaderIndex,
+      hotSettings,
+      $__12,
+      from,
+      to,
+      start,
+      end;
+    if (!notMovingColumn) {
+      $__12 = selection;
+      from = $__12.from;
+      to = $__12.to;
+      start = Math.min(from.col, to.col);
+      end = Math.max(from.col, to.col);
+      hotSettings = this.hot.getSettings();
+      for (columnHeaderIndex = start; columnHeaderIndex <= end; columnHeaderIndex++) {
+        if (typeof hotSettings.columns[columnHeaderIndex].manualColumnMove !== 'undefined' && !hotSettings.columns[columnHeaderIndex].manualColumnMove) {
+          notMovingColumn = true;
+          continue;
+        }
+      }
+    }
+    if (notMovingColumn) {
       priv.pressed = false;
       priv.columnsToMove.length = 0;
       removeClass(this.hot.rootElement, [CSS_ON_MOVING, CSS_SHOW_UI]);
@@ -17716,11 +17738,6 @@ var $ManualColumnMove = ManualColumnMove;
       this.guideline.appendTo(wtTable.hider);
       this.backlight.appendTo(wtTable.hider);
     }
-    var $__12 = selection,
-        from = $__12.from,
-        to = $__12.to;
-    var start = Math.min(from.col, to.col);
-    var end = Math.max(from.col, to.col);
     if (coords.row < 0 && (coords.col >= start && coords.col <= end)) {
       blockCalculations.column = true;
       priv.pressed = true;
